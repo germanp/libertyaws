@@ -2,6 +2,7 @@ package org.libertya.ws;
 
 import org.libertya.ws.bean.parameter.AllocationParameterBean;
 import org.libertya.ws.bean.parameter.BPartnerParameterBean;
+import org.libertya.ws.bean.parameter.CustomServiceParameterBean;
 import org.libertya.ws.bean.parameter.DocumentParameterBean;
 import org.libertya.ws.bean.parameter.FilteredColumnsParameterBean;
 import org.libertya.ws.bean.parameter.InvoiceParameterBean;
@@ -9,6 +10,7 @@ import org.libertya.ws.bean.parameter.OrderParameterBean;
 import org.libertya.ws.bean.parameter.ParameterBean;
 import org.libertya.ws.bean.parameter.ReplicationParameterBean;
 import org.libertya.ws.bean.result.BPartnerResultBean;
+import org.libertya.ws.bean.result.CustomServiceResultBean;
 import org.libertya.ws.bean.result.DocumentResultBean;
 import org.libertya.ws.bean.result.InvoiceResultBean;
 import org.libertya.ws.bean.result.MultipleDocumentsResultBean;
@@ -487,6 +489,25 @@ public interface LibertyaWS {
 	public ResultBean orderVoidByColumn(ParameterBean data, String columnName, String columnCriteria);
 	
 	
+	/**
+	 * Actualiza campos de la cabecera del pedido únicamente.  Si el pedido estaba completado lo reabre.
+	 * @param data el conjunto de datos a actualizar correspondientes a la cabecera del pedido
+	 * @param orderID el ID del pedido a actualizar
+	 * @param completeOrder completa la orden si la misma tuvo que ser reabierta, o si bien la misma estaba en borrador
+	 * @return ResultBean con OK, ERROR, etc. 
+	 */
+	public ResultBean orderUpdateByID(ParameterBean data, int orderID, boolean completeOrder);
+	
+	/**
+	 * Actualiza campos de la cabecera del pedido únicamente.  Si el pedido estaba completado lo reabre.
+	 * @param data el conjunto de datos a actualizar correspondientes a la cabecera del pedido
+	 * @param columnName y columnCriteria columna y valor a filtrar para recuperar el pedido en cuestion
+	 * @param completeOrder completa la orden si la misma tuvo que ser reabierta, o si bien la misma estaba en borrador
+	 * @return ResultBean con OK, ERROR, etc. 
+	 */
+	public ResultBean orderUpdateByColumn(ParameterBean data, String columnName, String columnCriteria, boolean completeOrder);
+
+	
 	/* ===================================================== */
 	/* ===================== Remitos ======================= */
 	/* ===================================================== */
@@ -727,6 +748,70 @@ public interface LibertyaWS {
 	
 	
 	/* ================================================================== */
+	/* ========================= Inventario ============================= */
+	/* ================================================================== */
+	
+	/**
+	 * Creación de entrada en Inventario (Recuento de inventario, E/S Simple, etc.)
+	 * @param data parametros correspondientes (cabecera y lineas)
+	 * @param completeInventory indica si quiere completar el inventario
+	 * @return ResultBean con OK, ERROR, etc. 
+	 */
+	public ResultBean inventoryCreate(DocumentParameterBean data, boolean completeInventory);
+	
+	/**
+	 * Permite completar un inventario indicando su ID
+	 * @param data parametros de acceso
+	 * @param inventoryID ID del inventario a completar
+	 * @return ResultBean con OK, ERROR, etc. 
+	 */
+	public ResultBean inventoryCompleteByID(ParameterBean data, int inventoryID);
+	
+	/**
+	 * Permite completar un inventario especificando el mismo mediante una columna y su valor 
+	 * @param data parametros de acceso
+	 * @param columnName columna a filtrar para recuperar el inventario en cuestión
+	 * @param value valor a filtrar para recuperar el inventario en cuestión
+	 * @return ResultBean con OK, ERROR, etc. 
+	 */
+	public ResultBean inventoryCompleteByColumn(ParameterBean data, String columnName, String value);
+	
+	/**
+	 * Permite eliminar un inventario indicando su ID
+	 * @param data parametros de acceso
+	 * @param inventoryID ID del inventario a eliminar
+	 * @return ResultBean con OK, ERROR, etc. 
+	 */
+	public ResultBean inventoryDeleteByID(ParameterBean data, int inventoryID);
+	
+	/**
+	 * Permite eliminar un inventario especificando el mismo mediante una columna y su valor
+	 * @param data parametros de acceso
+	 * @param columnName columna a filtrar para recuperar el inventario en cuestión
+	 * @param value valor a filtrar para recuperar el inventario en cuestión
+	 * @return ResultBean con OK, ERROR, etc. 
+	 */
+	public ResultBean inventoryDeleteByColumn(ParameterBean data, String columnName, String value);
+		
+	/**
+	 * Permite anular un inventario indicando su ID
+	 * @param data parametros de acceso
+	 * @param inventoryID ID del inventario a anular
+	 * @return ResultBean con OK, ERROR, etc. 
+	 */
+	public ResultBean inventoryVoidByID(ParameterBean data, int inventoryID);
+	
+	/**
+	 * Permite anular un inventario especificando el mismo mediante una columna y su valor
+	 * @param data parametros de acceso
+	 * @param columnName columna a filtrar para recuperar el inventario en cuestión
+	 * @param value valor a filtrar para recuperar el inventario en cuestión
+	 * @return ResultBean con OK, ERROR, etc. 
+	 */
+	public ResultBean inventoryVoidByColumn(ParameterBean data, String columnName, String value);
+	
+	
+	/* ================================================================== */
 	/* ========================= Replicación ============================ */
 	/* ================================================================== */
 
@@ -752,4 +837,11 @@ public interface LibertyaWS {
 	 * @return MultipleRecordsResultBean con OK, ERROR, los registros correspondientes
 	 */
 	public MultipleRecordsResultBean recordQuery(FilteredColumnsParameterBean data, String tableName, String whereClause, boolean includeNamedReferences);
+	
+	/**
+	 * Ejecuta un metodo específico de Libertya de manera dinámica
+	 * @param data parametros generales, información del metodo a ejecutar y parámetros
+	 * @return ResultBean con OK, ERROR, etc.
+	 */
+	public CustomServiceResultBean customService(CustomServiceParameterBean data);
 }

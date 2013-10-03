@@ -2,6 +2,7 @@ package org.libertya.ws;
 
 import org.libertya.ws.bean.parameter.AllocationParameterBean;
 import org.libertya.ws.bean.parameter.BPartnerParameterBean;
+import org.libertya.ws.bean.parameter.CustomServiceParameterBean;
 import org.libertya.ws.bean.parameter.DocumentParameterBean;
 import org.libertya.ws.bean.parameter.FilteredColumnsParameterBean;
 import org.libertya.ws.bean.parameter.InvoiceParameterBean;
@@ -9,6 +10,7 @@ import org.libertya.ws.bean.parameter.OrderParameterBean;
 import org.libertya.ws.bean.parameter.ParameterBean;
 import org.libertya.ws.bean.parameter.ReplicationParameterBean;
 import org.libertya.ws.bean.result.BPartnerResultBean;
+import org.libertya.ws.bean.result.CustomServiceResultBean;
 import org.libertya.ws.bean.result.DocumentResultBean;
 import org.libertya.ws.bean.result.InvoiceResultBean;
 import org.libertya.ws.bean.result.MultipleDocumentsResultBean;
@@ -19,9 +21,11 @@ import org.libertya.ws.bean.result.StorageResultBean;
 import org.libertya.ws.handler.AllocationDocumentHandler;
 import org.libertya.ws.handler.BPartnerBalanceHandler;
 import org.libertya.ws.handler.BPartnerCRUDHandler;
+import org.libertya.ws.handler.CustomServiceHandler;
 import org.libertya.ws.handler.DocumentQueryHandler;
 import org.libertya.ws.handler.GeneralRecordQueryHandler;
 import org.libertya.ws.handler.InOutDocumentHandler;
+import org.libertya.ws.handler.InventoryDocumentHandler;
 import org.libertya.ws.handler.InvoiceDocumentHandler;
 import org.libertya.ws.handler.OrderDocumentHandler;
 import org.libertya.ws.handler.ProductCRUDHandler;
@@ -236,6 +240,15 @@ public class LibertyaWSImpl implements LibertyaWS {
 	public synchronized ResultBean orderVoidByColumn(ParameterBean data, String columnName, String columnCriteria) {
 		return new OrderDocumentHandler().orderVoidByColumn(data, columnName, columnCriteria);
 	}
+	
+	public ResultBean orderUpdateByID(ParameterBean data, int orderID, boolean completeOrder) {
+		return new OrderDocumentHandler().orderUpdateByID(data, orderID, completeOrder);
+	}
+	
+	public ResultBean orderUpdateByColumn(ParameterBean data, String columnName, String columnCriteria, boolean completeOrder) {
+		return new OrderDocumentHandler().orderUpdateByColumn(data, columnName, columnCriteria, completeOrder);
+	}
+
 
 	/* ===================================================== */
 	/* ===================== Remitos ======================= */
@@ -338,6 +351,38 @@ public class LibertyaWSImpl implements LibertyaWS {
 	}
 	
 	/* ================================================================== */
+	/* ============================ Stock =============================== */
+	/* ================================================================== */
+	
+	public ResultBean inventoryCreate(DocumentParameterBean data, boolean completeInventory) {
+		return new InventoryDocumentHandler().inventoryCreate(data, completeInventory);
+	}
+
+	public ResultBean inventoryCompleteByID(ParameterBean data, int inventoryID) {
+		return new InventoryDocumentHandler().inventoryCompleteByID(data, inventoryID);
+	}
+
+	public ResultBean inventoryCompleteByColumn(ParameterBean data, String columnName, String value) {
+		return new InventoryDocumentHandler().inventoryCompleteByColumn(data, columnName, value);
+	}
+
+	public ResultBean inventoryDeleteByID(ParameterBean data, int inventoryID) {
+		return new InventoryDocumentHandler().inventoryDeleteByID(data, inventoryID);
+	}
+
+	public ResultBean inventoryDeleteByColumn(ParameterBean data, String columnName, String value) {
+		return new InventoryDocumentHandler().inventoryDeleteByColumn(data, columnName, value);
+	}
+
+	public ResultBean inventoryVoidByID(ParameterBean data, int inventoryID) {
+		return new InventoryDocumentHandler().inventoryVoidByID(data, inventoryID);
+	}
+
+	public ResultBean inventoryVoidByColumn(ParameterBean data, String columnName, String value) {
+		return new InventoryDocumentHandler().inventoryVoidByColumn(data, columnName, value);
+	}
+	
+	/* ================================================================== */
 	/* ========================= Replicación ============================ */
 	/* ================================================================== */
 	
@@ -352,4 +397,10 @@ public class LibertyaWSImpl implements LibertyaWS {
 	public synchronized MultipleRecordsResultBean recordQuery(FilteredColumnsParameterBean data, String tableName, String whereClause, boolean includeNamedReferences) {
 		return new GeneralRecordQueryHandler().recordQuery(data, tableName, whereClause, includeNamedReferences);
 	}
+	
+	public CustomServiceResultBean customService(CustomServiceParameterBean data) {
+		return new CustomServiceHandler().customService(data);
+	}
+
+
 }

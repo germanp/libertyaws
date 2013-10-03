@@ -404,4 +404,16 @@ public class OrderDocumentHandler extends DocumentHandler {
 		return anInOut;		
 	}
 	
+	
+	public ResultBean orderUpdateByID(ParameterBean data, int orderID, boolean completeOrder) {
+		// TODO: Implementation pending
+		return null;
+	}
+	
+	public ResultBean orderUpdateByColumn(ParameterBean data, String columnName, String columnCriteria, boolean completeOrder) {
+		// TODO: Implementation pending
+		return null;
+	}
+
+	
 }

@@ -1,13 +1,14 @@
 package org.libertya.ws.bean.result;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-
-import org.openXpertya.plugin.common.DynamicResult;
 
 public class CustomServiceResultBean extends ResultBean {
 
-	/** Nomina dinámica de argumentos. */
-	public DynamicResult result = new DynamicResult();
+	/** 
+	 * Nomina dinámica de resultados.  Similar a la nómina dinámica de argumentos. 
+	 */
+	public ArrayList<HashMap<String, ArrayList<String>>> result = new ArrayList<HashMap<String, ArrayList<String>>>();
 	
 	/**
 	 * Constructor por defecto.  Ver superclase.
@@ -23,13 +24,14 @@ public class CustomServiceResultBean extends ResultBean {
 		super(error, errorMsg, map);
 	}
 
-	public DynamicResult getResult() {
+	public ArrayList<HashMap<String, ArrayList<String>>> getResult() {
 		return result;
 	}
 
-	public void setResult(DynamicResult result) {
+	public void setResult(ArrayList<HashMap<String, ArrayList<String>>> result) {
 		this.result = result;
 	}
+
 
 	
 	

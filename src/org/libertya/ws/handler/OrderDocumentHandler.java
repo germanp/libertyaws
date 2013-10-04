@@ -404,15 +404,70 @@ public class OrderDocumentHandler extends DocumentHandler {
 		return anInOut;		
 	}
 	
-	
+	/**
+	 * Actualiza campos de la cabecera del pedido únicamente.  Si el pedido estaba completado lo reabre. Recupera el pedido por ID.
+	 */
 	public ResultBean orderUpdateByID(ParameterBean data, int orderID, boolean completeOrder) {
-		// TODO: Implementation pending
-		return null;
+		return orderUpdate(data, orderID, null, null, completeOrder);
 	}
-	
+
+	/**
+	 * Actualiza campos de la cabecera del pedido únicamente.  Si el pedido estaba completado lo reabre.  Recupera el pedido por columna y valor
+	 */
 	public ResultBean orderUpdateByColumn(ParameterBean data, String columnName, String columnCriteria, boolean completeOrder) {
-		// TODO: Implementation pending
-		return null;
+		return orderUpdate(data, -1, columnName, columnCriteria, completeOrder);
+	}
+
+	/**
+	 * Actualiza campos de la cabecera del pedido únicamente.  Si el pedido estaba completado lo reabre.
+	 * @param data el conjunto de datos a actualizar correspondientes a la cabecera del pedido
+	 * @param orderID el ID del pedido a actualizar
+	 * @param columnName y columnCriteria columna y valor a filtrar para recuperar el pedido en cuestion
+	 * @param completeOrder completa la orden si la misma tuvo que ser reabierta, o si bien la misma estaba en borrador
+	 * @return ResultBean con OK, ERROR, etc. 
+	 */
+	protected ResultBean orderUpdate(ParameterBean data, int orderID, String columnName, String columnCriteria, boolean completeOrder) {
+		try
+		{
+			/* === Configuracion inicial === */
+			init(data, new String[]{"orderID", "columnName", "columnCriteria", "completeOrder"}, new Object[]{orderID, columnName, columnCriteria, completeOrder});
+			
+			/* === Procesar (logica especifica) === */	
+			// Instanciar y persistir Invoice
+			MOrder anOrder = (MOrder)getPO("C_Order", orderID, columnName, columnCriteria, false, false, true, true);
+			
+			// El pedido ya se encuenta cerrado?
+			if (DocAction.STATUS_Closed.equals(anOrder.getDocStatus()))
+				throw new ModelException ("El pedido se encuentra cerrado");
+
+			// Si esta completado, intentar reabrirlo
+			if (DocAction.STATUS_Completed.equals(anOrder.getDocStatus()) && !DocumentEngine.processAndSave(anOrder, DocAction.ACTION_ReActivate, false))
+				throw new ModelException("Error al reactivar el pedido:" + Msg.parseTranslation(getCtx(), anOrder.getProcessMsg()));				
+			
+			// Actualizar valores, completar pedido
+			setValues(anOrder, data.getMainTable(), false);
+			if (!anOrder.save())
+				throw new ModelException("Error al actualizar el pedido:" + CLogger.retrieveErrorAsString());
+			if (completeOrder && !DocumentEngine.processAndSave(anOrder, DocAction.ACTION_Complete, false))
+				throw new ModelException("Error al completar el pedido:" + Msg.parseTranslation(getCtx(), anOrder.getProcessMsg()));
+
+			/* === Commitear transaccion === */
+			Trx.getTrx(getTrxName()).commit();
+			
+			/* === Retornar valor === */
+			HashMap<String, String> result = new HashMap<String, String>();
+			return new ResultBean(false, null, result);
+		}
+		catch (ModelException me) {
+			return processException(me, wsInvocationArguments(data));
+		}
+		catch (Exception e) {
+			return processException(e, wsInvocationArguments(data));
+		}
+		finally	{
+			closeTransaction();
+		}
+
 	}
 
 	

@@ -1,8 +1,12 @@
 package org.libertya.ws.client;
 
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import org.libertya.ws.bean.parameter.AllocationParameterBean;
 import org.libertya.ws.bean.parameter.BPartnerParameterBean;
+import org.libertya.ws.bean.parameter.CustomServiceParameterBean;
 import org.libertya.ws.bean.parameter.DocumentParameterBean;
 import org.libertya.ws.bean.parameter.FilteredColumnsParameterBean;
 import org.libertya.ws.bean.parameter.InvoiceParameterBean;
@@ -35,28 +39,6 @@ public class LibertyaWSClient {
 			// Recuperar el servicio
 			ws.libertya.org.LibertyaWS lyws = locator.getLibertyaWS();
 //			org.libertya.ws.LibertyaWS lyws = new org.libertya.ws.LibertyaWSImpl();
-
-			
-			// Prueba 7: Crear un producto
-			ParameterBean pDataCMD = new ParameterBean("AdminCMD", "AdminCMD", 1010016, 0);
-			pDataCMD.addColumnToMainTable("value", "Articulo 4 CMD");
-			pDataCMD.addColumnToMainTable("name", "un nombre de Articulo");
-			pDataCMD.addColumnToMainTable("c_uom_id", "1000000");
-			pDataCMD.addColumnToMainTable("m_product_category_id", "1010146");
-			pDataCMD.addColumnToMainTable("c_taxcategory_id", "1010050");
-			ResultBean newProductCMD = lyws.productCreate(pDataCMD); 
-			System.out.println(newProductCMD);
-			System.out.println(" -------------- \n ");
-
-			
-			// Prueba X: actualizar EC
-			BPartnerParameterBean pb = new BPartnerParameterBean("AdminCMD", "AdminCMD", 1010016, 1010053);
-			pb.addColumnToBPartner("description", "eae5a");
-			pb.addColumnToLocation("city", "un cambio53");
-			pb.addColumnToLocation("phone", "telefono53");
-			pb.addColumnToLocation("name", "nombrecito53");
-			System.out.println(lyws.bPartnerUpdate(pb, 1012213, 1012222));
-			
 			
 			// Prueba 1: Eliminar una factura
 			InvoiceParameterBean data = new InvoiceParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010053);
@@ -94,12 +76,12 @@ public class LibertyaWSClient {
 			System.out.println(" -------------- \n ");
 			
 			// Prueba 4: Crear una Factura
-			InvoiceParameterBean data4 = new InvoiceParameterBean("AdminCMD", "AdminCMD", 1010016, 1010053);
+			InvoiceParameterBean data4 = new InvoiceParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010053);
 			// Opcion 1: indicando DocTypeTarget
-//			data4.addColumnToHeader("C_DocTypeTarget_ID", "1010507");
+			data4.addColumnToHeader("C_DocTypeTarget_ID", "1010507");
 			// Opcion 2: indicando PuntoDeVenta + TipoComprobante
 			data4.addColumnToHeader("TipoComprobante", "FC");
-//			data4.addColumnToHeader("PuntoDeVenta", "1");
+			data4.addColumnToHeader("PuntoDeVenta", "1");
 			data4.addColumnToHeader("DateInvoiced", "2012-08-01 11:25:00");		 // OJO CON EL FORMATO: YYYY-MM-DD HH:mm:ss  
 			data4.addColumnToHeader("C_BPartner_Location_ID", "1012158");
 			data4.addColumnToHeader("M_PriceList_ID", "1010595");
@@ -113,19 +95,19 @@ public class LibertyaWSClient {
 			data4.addColumnToCurrentLine("Line", "1");							// Datos de línea 1
 			data4.addColumnToCurrentLine("QtyEntered", "1");
 			data4.addColumnToCurrentLine("PriceEntered", "43.01");
-	//		data4.addColumnToCurrentLine("C_Tax_ID", "1010084");
+			data4.addColumnToCurrentLine("C_Tax_ID", "1010084");
 			data4.addColumnToCurrentLine("M_Product_ID", "1015400");
 			data4.addColumnToCurrentLine("Description", "LINEA 1");
-//				data.addColumnToCurrentLine("C_UOM_ID", "1000000");  // no se debe setear, es readonly
+			data4.addColumnToCurrentLine("C_UOM_ID", "1000000");  // no se debe setear, es readonly
 			ResultBean resultI = lyws.invoiceCreateCustomer(data4, 1012145, null, null, false); 
 			System.out.println(resultI);
 			System.out.println(" -------------- \n ");
 			
-//			if (!resultI.isError()) {
-				ParameterBean edit = new ParameterBean("AdminCMD", "AdminCMD", 1010016, 0);
+			if (!resultI.isError()) {
+				ParameterBean edit = new ParameterBean("AdminLibertya", "AdminLibertya", 1010016, 0);
 				edit.addColumnToMainTable("Description", "Una actualizacion");
 				System.out.println(lyws.invoiceUpdateByID(edit, 1021717));
-//			}
+			}
 			
 			// Prueba 5: Recuperar facturas
 			ParameterBean data5 = new ParameterBean("AdminLibertya", "AdminLibertya", 1010016, 0);
@@ -156,44 +138,9 @@ public class LibertyaWSClient {
 				System.out.println(lyws.productRetrieveByID(pData2, Integer.parseInt(newProduct.getMainResult().get("M_Product_ID"))));
 			}
 			
-			
-			
-	//		Prueba 9: Crear un nuevo pedido de venta. Completarlo.  Crear factura a partir del pedido.  Completarla.
-			//			 Modificado para soportar determinacion de tipos de documentos de manera dinamica a partir de ptoVta y tipoComprobante
-			OrderParameterBean dBean5 = new OrderParameterBean("AdminCMD", "AdminCMD", 1010016, 1010099);
-			dBean5.addColumnToHeader("C_DocTypeTarget_ID", "1010507");
-			dBean5.addColumnToHeader("C_BPartner_Location_ID", "1012158");
-			dBean5.addColumnToHeader("M_PriceList_ID", "1010642");
-			dBean5.addColumnToHeader("C_Currency_ID", "118");
-			dBean5.addColumnToHeader("PaymentRule", "Tr");
-			dBean5.addColumnToHeader("C_PaymentTerm_ID", "1000073");
-			dBean5.addColumnToHeader("CreateCashLine", "N");
-			dBean5.addColumnToHeader("ManualGeneralDiscount", "0.00");
-			dBean5.addColumnToHeader("M_Warehouse_ID", "1010096");
-			dBean5.addColumnToHeader("Description", "Una pedido desde WS");
-			dBean5.newDocumentLine();
-			dBean5.addColumnToCurrentLine("Line", "1");
-			dBean5.addColumnToCurrentLine("QtyEntered", "15");
-			dBean5.addColumnToCurrentLine("PriceEntered", "25");
-			dBean5.addColumnToCurrentLine("C_Tax_ID", "1010085");
-			dBean5.addColumnToCurrentLine("M_Product_ID", "1015400");
-			dBean5.addColumnToCurrentLine("Description", "LINEA 1");
-			// Opcion 1: Indicar el C_DocTypeTarget_ID directamente (comentado para utilizar la opción 2)
-//			dBean2.setInvoiceDocTypeTargetID(1010587);
-			// Opcion 2: Indicar el Punto de Venta + Tipo de Comprobante
-//			dBean2.setInvoicePuntoDeVenta(1);
-			dBean5.setInvoiceTipoComprobante(OrderParameterBean.TIPO_COMPROBANTE_FACTURA);
-			ResultBean orderResult33 = lyws.orderCreateCustomer(dBean5, 1012145, null, null, true, true, true);
-			System.out.println(orderResult33);
-			System.out.println(" -------------- \n ");
-			
-			
-			
-			
-			
 			// Prueba 9: Crear un nuevo pedido de venta. Completarlo.  Crear factura a partir del pedido.  Completarla.
 			//			 Modificado para soportar determinacion de tipos de documentos de manera dinamica a partir de ptoVta y tipoComprobante
-			OrderParameterBean dBean2 = new OrderParameterBean("AdminCMD", "AdminCMD", 1010016, 1010096);
+			OrderParameterBean dBean2 = new OrderParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010096);
 			dBean2.addColumnToHeader("C_DocTypeTarget_ID", "1010507");
 			dBean2.addColumnToHeader("C_BPartner_Location_ID", "1012158");
 			dBean2.addColumnToHeader("M_PriceList_ID", "1010642");
@@ -214,7 +161,7 @@ public class LibertyaWSClient {
 			// Opcion 1: Indicar el C_DocTypeTarget_ID directamente (comentado para utilizar la opción 2)
 //			dBean2.setInvoiceDocTypeTargetID(1010587);
 			// Opcion 2: Indicar el Punto de Venta + Tipo de Comprobante
-//			dBean2.setInvoicePuntoDeVenta(1);
+			dBean2.setInvoicePuntoDeVenta(1);
 			dBean2.setInvoiceTipoComprobante(OrderParameterBean.TIPO_COMPROBANTE_FACTURA);
 			ResultBean orderResult = lyws.orderCreateCustomer(dBean2, 1012145, null, null, true, true, true);
 			System.out.println(orderResult);
@@ -254,22 +201,20 @@ public class LibertyaWSClient {
 			System.out.println(lyws.bPartnerBalanceSumChecks(beanX, -1, new int[]{1012145, 1012196}, null, 1010016, 0));
 			System.out.println(lyws.bPartnerBalanceSumInvoices(beanX, -1, new int[]{1012145, 1012196}, null, 1010016, 0));
 			System.out.println(lyws.bPartnerBalanceSumPayments(beanX, -1, new int[]{1012145, 1012196}, null, 1010016, 0));
-
-			
 			
 			// Prueba 14: Crear un recibo de cliente cancelando una factura existente con varios medios de pago
-			AllocationParameterBean beanRC = new AllocationParameterBean("AdminCMD", "AdminCMD", 1010016, 1010099);
+			AllocationParameterBean beanRC = new AllocationParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010099);
 			beanRC.addColumnToHeader("Description", "Un RC desde WS");
 			// Factura a cobrar
 			beanRC.newInvoice();
 			beanRC.addColumnToCurrentInvoice("C_Invoice_ID", "1021753");
 			beanRC.addColumnToCurrentInvoice("Amount", "43.0100");
 			
-//			// Medio de pago: Nota de credito
-//			beanRC.newPayment();
-//			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010038");
-//			beanRC.addColumnToCurrentPayment("Amount", "70");
-//			beanRC.addColumnToCurrentPayment("C_Invoice_ID", "1021695");
+			// Medio de pago: Nota de credito
+			beanRC.newPayment();
+			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010038");
+			beanRC.addColumnToCurrentPayment("Amount", "70");
+			beanRC.addColumnToCurrentPayment("C_Invoice_ID", "1021695");
 			// Medio de pago: Transferencia bancaria
 			beanRC.newPayment();
 			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010052");
@@ -279,44 +224,44 @@ public class LibertyaWSClient {
 			beanRC.addColumnToCurrentPayment("A_Bank", "Un Banco");
 			beanRC.addColumnToCurrentPayment("TransferNo", "1234");
 			beanRC.addColumnToCurrentPayment("TransferDate", "2012-09-03 10:20:00");
-//			// Medio de pago: Tarjeta de credito
-//			beanRC.newPayment();
-//			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010036");
-//			beanRC.addColumnToCurrentPayment("Amount", "20");
-//			beanRC.addColumnToCurrentPayment("M_EntidadFinancieraPlan_ID", "1010033");
-//			beanRC.addColumnToCurrentPayment("A_Bank", "Comafi");
-//			beanRC.addColumnToCurrentPayment("CreditCardNumber", "102929281810");
-//			beanRC.addColumnToCurrentPayment("CouponNumber", "12341234");
-//			// Medio de pago: Cheque
-//			beanRC.newPayment();
-//			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010037");
-//			beanRC.addColumnToCurrentPayment("Amount", "40");
-//			beanRC.addColumnToCurrentPayment("C_BankAccount_ID", "1010070");
-//			beanRC.addColumnToCurrentPayment("CheckNo", "12345");
-//			beanRC.addColumnToCurrentPayment("DateTrx", "2012-09-03 10:26:15");
-//			beanRC.addColumnToCurrentPayment("DueDate", "2012-09-04 10:26:15");
-//			// Medio de pago: Efectivo
-//			beanRC.newPayment();
-//			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010033");
-//			beanRC.addColumnToCurrentPayment("Amount", "40");
-//			beanRC.addColumnToCurrentPayment("C_Cash_ID", "1010062");
-//			// Medio de pago: Cobro adelantado en efectivo
-//			beanRC.newPayment();
-//			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010035");
-//			beanRC.addColumnToCurrentPayment("Amount", "70");
-//			beanRC.addColumnToCurrentPayment("C_CashLine_ID", "1010100");
-//			// Medio de pago: Cobro adelantado mediante transf. bancaria
-//			beanRC.newPayment();
-//			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010035");
-//			beanRC.addColumnToCurrentPayment("Amount", "30");
-//			beanRC.addColumnToCurrentPayment("C_Payment_ID", "1011960");
-//			// Medio de pago: Retencion sufrida
-//			beanRC.newPayment();
-//			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010039");
-//			beanRC.addColumnToCurrentPayment("Amount", "50");
-//			beanRC.addColumnToCurrentPayment("C_RetencionSchema_ID", "1010054");
-//			beanRC.addColumnToCurrentPayment("Retenc_DocumentNo", "5311181");
-//			beanRC.addColumnToCurrentPayment("Retenc_Date", "2012-09-04 10:44:18");
+			// Medio de pago: Tarjeta de credito
+			beanRC.newPayment();
+			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010036");
+			beanRC.addColumnToCurrentPayment("Amount", "20");
+			beanRC.addColumnToCurrentPayment("M_EntidadFinancieraPlan_ID", "1010033");
+			beanRC.addColumnToCurrentPayment("A_Bank", "Comafi");
+			beanRC.addColumnToCurrentPayment("CreditCardNumber", "102929281810");
+			beanRC.addColumnToCurrentPayment("CouponNumber", "12341234");
+			// Medio de pago: Cheque
+			beanRC.newPayment();
+			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010037");
+			beanRC.addColumnToCurrentPayment("Amount", "40");
+			beanRC.addColumnToCurrentPayment("C_BankAccount_ID", "1010070");
+			beanRC.addColumnToCurrentPayment("CheckNo", "12345");
+			beanRC.addColumnToCurrentPayment("DateTrx", "2012-09-03 10:26:15");
+			beanRC.addColumnToCurrentPayment("DueDate", "2012-09-04 10:26:15");
+			// Medio de pago: Efectivo
+			beanRC.newPayment();
+			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010033");
+			beanRC.addColumnToCurrentPayment("Amount", "40");
+			beanRC.addColumnToCurrentPayment("C_Cash_ID", "1010062");
+			// Medio de pago: Cobro adelantado en efectivo
+			beanRC.newPayment();
+			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010035");
+			beanRC.addColumnToCurrentPayment("Amount", "70");
+			beanRC.addColumnToCurrentPayment("C_CashLine_ID", "1010100");
+			// Medio de pago: Cobro adelantado mediante transf. bancaria
+			beanRC.newPayment();
+			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010035");
+			beanRC.addColumnToCurrentPayment("Amount", "30");
+			beanRC.addColumnToCurrentPayment("C_Payment_ID", "1011960");
+			// Medio de pago: Retencion sufrida
+			beanRC.newPayment();
+			beanRC.addColumnToCurrentPayment("C_POSPaymentMedium_ID", "1010039");
+			beanRC.addColumnToCurrentPayment("Amount", "50");
+			beanRC.addColumnToCurrentPayment("C_RetencionSchema_ID", "1010054");
+			beanRC.addColumnToCurrentPayment("Retenc_DocumentNo", "5311181");
+			beanRC.addColumnToCurrentPayment("Retenc_Date", "2012-09-04 10:44:18");
 			// Invocar a la crecion de recibo para la entidad comercial cuyo value sea MC
 			ResultBean result = lyws.allocationCreateReceipt(beanRC, 1012221, null, null);
 			System.out.println(result);
@@ -374,6 +319,48 @@ public class LibertyaWSClient {
 			MultipleRecordsResultBean recResult = lyws.recordQuery(recParam, "M_ProductPrice", "created > '2001-01-01'", false);
 			System.out.println(recResult);
 			
+			// Prueba 21: Actualización de un pedido.  Si el mismo está completado, reabrirlo.  Luego completar dicho pedido.
+			ParameterBean test21 = new ParameterBean("AdminLibertya", "AdminLibertya", 1010016, 0);
+			test21.addColumnToMainTable("Description", "Una modificacion");
+			System.out.println(lyws.orderUpdateByID(test21, 1014059, true));
+			
+			// Prueba 22: Servicio genérico.  Invocar a un servicio en clase Example, que recibe 4 parámetros:
+			//				param1: un String; param2: un String; param3: un entero; param 4: una lista de valores
+			//			  En todos los casos, los valores son enviados como Strings
+			CustomServiceParameterBean test22 = new CustomServiceParameterBean("AdminLibertya", "AdminLibertya", 1010016, 0);
+			// Nombre de la clase a invocar
+			test22.setClassName("org.libertya.example.customService.Example");
+			// Definir Argumento 1
+			HashMap<String, ArrayList<String>> argument1 = new HashMap<String, ArrayList<String>>();
+			ArrayList<String> argument1Value = new ArrayList<String>();
+			argument1Value.add("foo");
+			argument1.put("param1", argument1Value);
+			// Definir Argumento 2
+			HashMap<String, ArrayList<String>> argument2 = new HashMap<String, ArrayList<String>>();
+			ArrayList<String> argument2Value = new ArrayList<String>();
+			argument2Value.add("bar");
+			argument2.put("param2", argument2Value);
+			// Definir Argumento 3
+			HashMap<String, ArrayList<String>> argument3 = new HashMap<String, ArrayList<String>>();
+			ArrayList<String> argument3Value = new ArrayList<String>();
+			argument3Value.add("43");
+			argument3.put("param3", argument3Value);
+			// Definir Argumento 4
+			HashMap<String, ArrayList<String>> argument4 = new HashMap<String, ArrayList<String>>();
+			ArrayList<String> argument4Value = new ArrayList<String>();
+			argument4Value.add("x");
+			argument4Value.add("y");
+			argument4Value.add("z");
+			argument4.put("param4", argument4Value);
+			// Nomina de argumentos e incorporar los argumentos previamente definidos
+			ArrayList<HashMap<String, ArrayList<String>>> arguments = new ArrayList<HashMap<String, ArrayList<String>>>();
+			arguments.add(argument1);
+			arguments.add(argument2);
+			arguments.add(argument3);
+			arguments.add(argument4);
+			test22.setArguments(arguments);
+			// Invocar al servicio
+			System.out.println(lyws.customService(test22));
 		}
 		catch (Exception e)
 		{

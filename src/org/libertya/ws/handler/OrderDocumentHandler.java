@@ -433,7 +433,7 @@ public class OrderDocumentHandler extends DocumentHandler {
 			init(data, new String[]{"orderID", "columnName", "columnCriteria", "completeOrder"}, new Object[]{orderID, columnName, columnCriteria, completeOrder});
 			
 			/* === Procesar (logica especifica) === */	
-			// Instanciar y persistir Invoice
+			// Recuperar el pedido
 			MOrder anOrder = (MOrder)getPO("C_Order", orderID, columnName, columnCriteria, false, false, true, true);
 			
 			// El pedido ya se encuenta cerrado?

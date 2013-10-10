@@ -3,6 +3,7 @@ package org.libertya.ws.bean.parameter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.libertya.wse.common.ListedMap;
 import org.openXpertya.plugin.common.CustomServiceInterface;
 
 public class CustomServiceParameterBean extends ParameterBean {
@@ -18,18 +19,18 @@ public class CustomServiceParameterBean extends ParameterBean {
 	 * <br>
 	 * Ejemplo: para el metodo con los siguientes parámetros:<br>	
 	 * <br>
-	 * 		<code>execute(String param1, String param2, int param3, ArrayList<Integer> param4)</code> <br>
+	 * 		<code>execute(String param1, String param2, int param3, Integer[] param4)</code> <br>
 	 * <br>
-	 * la invocación <code>execute('foo', 'bar', 43, {x, y, z}) se convierte en</code><br>
+	 * la invocación <code>execute('foo', 'bar', 43, {9, 8, 7}) se convierte en</code><br>
 	 * <br>
 	 * <code>
-	 * 	content[0]: param1 = {'foo'}<br>
-	 * 	content[1]: param2 = {'bar'}<br>
-	 * 	content[2]: param3 = {43}<br>
-	 * 	content[3]: param4 = {x, y, z}<br>
+	 * 	param1 = {'foo'}<br>
+	 * 	param2 = {'bar'}<br>
+	 * 	param3 = {'43'}<br>
+	 * 	param4 = {'9', '8', '7'}<br>
 	 * </code>
 	 */
-	public ArrayList<HashMap<String, ArrayList<String>>> arguments = new ArrayList<HashMap<String, ArrayList<String>>>();
+	public HashMap<String, ArrayList<String>> arguments = new HashMap<String, ArrayList<String>>();
 	
 	/**
 	 * Constructor por defecto.  Ver superclase.
@@ -43,6 +44,14 @@ public class CustomServiceParameterBean extends ParameterBean {
 	 */
 	public CustomServiceParameterBean(String userName, String password, int clientID, int orgID) {
 		super(userName, password, clientID, orgID);
+	}
+	
+	/**
+	 * Constructor para wrapper
+	 */
+	public CustomServiceParameterBean(String userName, String password, int clientID, int orgID, ListedMap[] arguments) {
+		super(userName, password, clientID, orgID);
+		fromListedMap(arguments);
 	}
 
 	public String getClassName() {
@@ -61,11 +70,11 @@ public class CustomServiceParameterBean extends ParameterBean {
 		this.methodName = methodName;
 	}
 	
-	public ArrayList<HashMap<String, ArrayList<String>>> getArguments() {
+	public HashMap<String, ArrayList<String>> getArguments() {
 		return arguments;
 	}
 
-	public void setArguments(ArrayList<HashMap<String, ArrayList<String>>> arguments) {
+	public void setArguments(HashMap<String, ArrayList<String>> arguments) {
 		this.arguments = arguments;
 	}
 	
@@ -74,9 +83,26 @@ public class CustomServiceParameterBean extends ParameterBean {
 		StringBuffer out = new StringBuffer(super.toString());
 		out.append("\n  Dynamic Arguments: ");
 		if (arguments != null)
-			out.append(arguments.toString());
+			for (String argName : arguments.keySet()) {
+				if (arguments.get(argName)!=null) {
+					out.append("\n ").append(argName).append(" : ");
+					for (String value : arguments.get(argName)) {
+						out.append(value).append(" ");
+					}
+				}
+			}
 		return out.toString();
 	}
 
+	public void fromListedMap(ListedMap[] arguments) {
+		for (ListedMap listedMap : arguments) {
+			ArrayList<String> aMapValue = new ArrayList<String>(); 
+			if (aMapValue != null) {
+				for (String value : listedMap.getValues())
+					aMapValue.add(value);
+			}
+			this.arguments.put(listedMap.getKey(), aMapValue);
+		}
+	}
 	
 }

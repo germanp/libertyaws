@@ -331,33 +331,25 @@ public class LibertyaWSClient {
 			// Nombre de la clase a invocar
 			test22.setClassName("org.libertya.example.customService.Example");
 			// Definir Argumento 1
-			HashMap<String, ArrayList<String>> argument1 = new HashMap<String, ArrayList<String>>();
 			ArrayList<String> argument1Value = new ArrayList<String>();
 			argument1Value.add("foo");
-			argument1.put("param1", argument1Value);
 			// Definir Argumento 2
-			HashMap<String, ArrayList<String>> argument2 = new HashMap<String, ArrayList<String>>();
 			ArrayList<String> argument2Value = new ArrayList<String>();
 			argument2Value.add("bar");
-			argument2.put("param2", argument2Value);
 			// Definir Argumento 3
-			HashMap<String, ArrayList<String>> argument3 = new HashMap<String, ArrayList<String>>();
 			ArrayList<String> argument3Value = new ArrayList<String>();
 			argument3Value.add("43");
-			argument3.put("param3", argument3Value);
 			// Definir Argumento 4
-			HashMap<String, ArrayList<String>> argument4 = new HashMap<String, ArrayList<String>>();
 			ArrayList<String> argument4Value = new ArrayList<String>();
 			argument4Value.add("x");
 			argument4Value.add("y");
 			argument4Value.add("z");
-			argument4.put("param4", argument4Value);
-			// Nomina de argumentos e incorporar los argumentos previamente definidos
-			ArrayList<HashMap<String, ArrayList<String>>> arguments = new ArrayList<HashMap<String, ArrayList<String>>>();
-			arguments.add(argument1);
-			arguments.add(argument2);
-			arguments.add(argument3);
-			arguments.add(argument4);
+			// Setear nomina de argumentos
+			HashMap<String, ArrayList<String>> arguments = new HashMap<String, ArrayList<String>>();
+			arguments.put("param1", argument1Value);
+			arguments.put("param2", argument2Value);
+			arguments.put("param3", argument3Value);
+			arguments.put("param4", argument4Value);
 			test22.setArguments(arguments);
 			// Invocar al servicio
 			System.out.println(lyws.customService(test22));

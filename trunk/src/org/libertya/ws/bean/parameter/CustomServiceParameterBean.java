@@ -51,7 +51,7 @@ public class CustomServiceParameterBean extends ParameterBean {
 	 */
 	public CustomServiceParameterBean(String userName, String password, int clientID, int orgID, ListedMap[] arguments) {
 		super(userName, password, clientID, orgID);
-		fromListedMap(arguments);
+		load(arguments);
 	}
 
 	public String getClassName() {
@@ -94,7 +94,7 @@ public class CustomServiceParameterBean extends ParameterBean {
 		return out.toString();
 	}
 
-	public void fromListedMap(ListedMap[] arguments) {
+	public void load(ListedMap[] arguments) {
 		for (ListedMap listedMap : arguments) {
 			ArrayList<String> aMapValue = new ArrayList<String>(); 
 			if (aMapValue != null) {

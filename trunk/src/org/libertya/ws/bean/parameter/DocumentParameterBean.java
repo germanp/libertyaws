@@ -3,6 +3,9 @@ package org.libertya.ws.bean.parameter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.libertya.wse.common.SimpleMap;
+import org.libertya.wse.param.DocumentLine;
+
 public class DocumentParameterBean extends ParameterBean {
 
 	/** Lineas de documento */
@@ -20,6 +23,14 @@ public class DocumentParameterBean extends ParameterBean {
 	 */
 	public DocumentParameterBean(String userName, String password,int clientID, int orgID) {
 		super(userName, password, clientID, orgID);
+	}
+	
+	/**
+	 * Constructor para wrapper
+	 */
+	public DocumentParameterBean(String userName, String password, int clientID, int orgID, SimpleMap[] header, DocumentLine[] lines) {
+		super(userName, password, clientID, orgID);
+		load(header, lines);
 	}
 	
 	/**
@@ -73,6 +84,24 @@ public class DocumentParameterBean extends ParameterBean {
 							append("; ");
 				}
 		return out.toString();
+	}
+	
+	public void load(SimpleMap[] header, DocumentLine[] lines) {
+		// Cargar la cabecera
+		if (header != null) {
+			for (SimpleMap simpleMap : header)
+				mainTable.put(simpleMap.getKey(), simpleMap.getValue());
+		}
+		// Cargar las lineas
+		if (lines != null) {
+			for (DocumentLine aLine : lines) {
+				HashMap<String, String> newLine = new HashMap<String, String>();
+				for (SimpleMap aLineContent : aLine.getContent()) {
+					newLine.put(aLineContent.getKey(), aLineContent.getValue());
+				}
+				documentLines.add(newLine);
+			}
+		}
 	}
 	
 }

@@ -50,7 +50,7 @@ public class CustomServiceResultBean extends ResultBean {
 		return out.toString();
 	}
 	
-	public ListedMap[] toSimpleMap() {
+	public ListedMap[] toListedMap() {
 		int i=0;
 		ListedMap[] retValue = new ListedMap[result.size()];
 		if (result != null) {
@@ -61,9 +61,10 @@ public class CustomServiceResultBean extends ResultBean {
 					argValues[j] = argValue;
 					j++;
 				}
-				retValue[i].setKey(argName);
-				retValue[i].setValues(argValues);
-				i++;
+				ListedMap aMap = new ListedMap();
+				aMap.setKey(argName);
+				aMap.setValues(argValues);
+				retValue[i++] = aMap;
 			}
 		}
 		return retValue;

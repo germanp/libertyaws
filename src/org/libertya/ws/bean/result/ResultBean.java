@@ -2,6 +2,9 @@ package org.libertya.ws.bean.result;
 
 import java.util.HashMap;
 
+import org.libertya.wse.common.ListedMap;
+import org.libertya.wse.common.SimpleMap;
+
 public class ResultBean {
 
 	/** El resultado fue un error */
@@ -92,4 +95,17 @@ public class ResultBean {
 		table.put(columnName, columnValue);
 	}
 	
+	public SimpleMap[] toSimpleMap() {
+		int i=0;
+		SimpleMap[] retValue = new SimpleMap[mainResult.size()];
+		if (mainResult != null) {
+			for (String argName : mainResult.keySet()) {
+				SimpleMap aMap = new SimpleMap();
+				aMap.setKey(argName);
+				aMap.setValue(mainResult.get(argName));
+				retValue[i++] = aMap;
+			}
+		}
+		return retValue;
+	}
 }

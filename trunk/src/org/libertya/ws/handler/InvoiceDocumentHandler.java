@@ -247,7 +247,7 @@ public class InvoiceDocumentHandler extends DocumentHandler {
 				for (HashMap<String, String> paramOrderLine : paramOrderLines)
 				{
 					// Si esta línea de pedido (pasada por parametro) no coincide en su c_orderline_id, saltearla y buscar la siguiente
-					if (orderLines[i].getC_OrderLine_ID() != Integer.parseInt(paramOrderLine.get("c_orderline_id")))
+					if (paramOrderLine.get("c_orderline_id") == null ||  orderLines[i].getC_OrderLine_ID() != Integer.parseInt(paramOrderLine.get("c_orderline_id")))
 						continue;
 					
 					// Setear los valores a la linea de factura en funcion de los parametros pasados como parametro 

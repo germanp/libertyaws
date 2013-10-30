@@ -1,7 +1,5 @@
 package org.libertya.wse;
 
-import org.libertya.ws.bean.parameter.DocumentParameterBean;
-import org.libertya.ws.bean.parameter.ParameterBean;
 import org.libertya.wse.common.ListedMap;
 import org.libertya.wse.common.SimpleMap;
 import org.libertya.wse.param.DocumentLine;

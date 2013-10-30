@@ -140,16 +140,16 @@ public class LibertyaWSClient {
 			
 			// Prueba 9: Crear un nuevo pedido de venta. Completarlo.  Crear factura a partir del pedido.  Completarla.
 			//			 Modificado para soportar determinacion de tipos de documentos de manera dinamica a partir de ptoVta y tipoComprobante
-			OrderParameterBean dBean2 = new OrderParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010096);
+			OrderParameterBean dBean2 = new OrderParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010053);
 			dBean2.addColumnToHeader("C_DocTypeTarget_ID", "1010507");
 			dBean2.addColumnToHeader("C_BPartner_Location_ID", "1012158");
-			dBean2.addColumnToHeader("M_PriceList_ID", "1010642");
+			dBean2.addColumnToHeader("M_PriceList_ID", "1010595");
 			dBean2.addColumnToHeader("C_Currency_ID", "118");
 			dBean2.addColumnToHeader("PaymentRule", "Tr");
 			dBean2.addColumnToHeader("C_PaymentTerm_ID", "1000073");
 			dBean2.addColumnToHeader("CreateCashLine", "N");
 			dBean2.addColumnToHeader("ManualGeneralDiscount", "0.00");
-			dBean2.addColumnToHeader("M_Warehouse_ID", "1010091");
+			dBean2.addColumnToHeader("M_Warehouse_ID", "1010048");
 			dBean2.addColumnToHeader("Description", "Una pedido desde WS");
 			dBean2.newDocumentLine();
 			dBean2.addColumnToCurrentLine("Line", "1");
@@ -166,6 +166,15 @@ public class LibertyaWSClient {
 			ResultBean orderResult = lyws.orderCreateCustomer(dBean2, 1012145, null, null, true, true, true);
 			System.out.println(orderResult);
 			System.out.println(" -------------- \n ");
+			
+			// Alternativamente se podría no generar la factura en la invocación anterior, 
+			// y crearla posteriormente desde la siguiente invocación (actualmente comentada)
+//			if (!orderResult.isError()) {
+//				InvoiceParameterBean aBean = new InvoiceParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010053);
+//				aBean.addColumnToHeader("DateInvoiced", "2013-10-30 11:24:05");
+//				aBean.addColumnToHeader("c_doctypetarget_id", "1010507");
+//				System.out.println(lyws.invoiceCreateCustomerFromOrderByID(aBean, Integer.parseInt(orderResult.getMainResult().get("C_Order_ID")), false));
+//			}
 			
 			// Prueba 10: Anular el pedido recien creado
 			if (!orderResult.isError()) {

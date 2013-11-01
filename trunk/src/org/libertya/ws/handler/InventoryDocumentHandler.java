@@ -51,7 +51,7 @@ public class InventoryDocumentHandler extends GeneralHandler {
 				MInventoryLine anInventoryLine = new MInventoryLine(getCtx(), 0, getTrxName());
 				anInventoryLine.setM_Inventory_ID(anInventory.getM_Inventory_ID());
 				setValues(anInventoryLine, line, true);
-				if (!anInventory.save())
+				if (!anInventoryLine.save())
 					throw new ModelException("Error al persistir linea de inventario:" + CLogger.retrieveErrorAsString());
 			}
 			// Completar el inventario si corresponde

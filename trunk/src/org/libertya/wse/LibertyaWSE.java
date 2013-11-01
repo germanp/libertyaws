@@ -56,6 +56,46 @@ public interface LibertyaWSE {
 	
 	
 	/* ================================================================== */
+	/* ========================= Inventario ============================= */
+	/* ================================================================== */
+	
+	/**
+	 * Wrapper para <code>inventoryCreate(DocumentParameterBean data, boolean completeInventory)</code>
+	 */
+	public SimpleResult inventoryCreate(Login login, SimpleMap[] header, DocumentLine[] lines, boolean completeInventory);
+	
+	/**
+	 * Wrapper para <code>inventoryCompleteByID(ParameterBean data, int inventoryID)</code>
+	 */
+	public SimpleResult inventoryCompleteByID(Login login, SimpleMap[] data, int inventoryID);
+	
+	/**
+	 * Wrapper para <code>inventoryCompleteByColumn(ParameterBean data, String columnName, String value)</code>
+	 */
+	public SimpleResult inventoryCompleteByColumn(Login login, SimpleMap[] data, String columnName, String value);
+	
+	/**
+	 * Wrapper para <code>inventoryDeleteByID(ParameterBean data, int inventoryID)</code>
+	 */
+	public SimpleResult inventoryDeleteByID(Login login, SimpleMap[] data, int inventoryID);
+	
+	/**
+	 * Wrapper para <code>inventoryDeleteByColumn(ParameterBean data, String columnName, String value)</code>
+	 */
+	public SimpleResult inventoryDeleteByColumn(Login login, SimpleMap[] data, String columnName, String value);
+		
+	/**
+	 * Wrapper para <code>inventoryVoidByID(ParameterBean data, int inventoryID)</code>
+	 */
+	public SimpleResult inventoryVoidByID(Login login, SimpleMap[] data, int inventoryID);
+	
+	/**
+	 * Wrapper para <code>inventoryVoidByColumn(ParameterBean data, String columnName, String value)</code>
+	 */
+	public SimpleResult inventoryVoidByColumn(Login login, SimpleMap[] data, String columnName, String value);
+	
+	
+	/* ================================================================== */
 	/* ==================== Funciones de uso general ==================== */
 	/* ================================================================== */
 	

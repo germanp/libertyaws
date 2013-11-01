@@ -362,6 +362,19 @@ public class LibertyaWSClient {
 			test22.setArguments(arguments);
 			// Invocar al servicio
 			System.out.println(lyws.customService(test22));
+			
+			// Prueba 23: Gestión de inventario
+			DocumentParameterBean param23 = new DocumentParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010053);
+			param23.addColumnToHeader("c_doctype_id", "1010529");
+			param23.addColumnToHeader("m_warehouse_id", "1010048");
+			param23.addColumnToHeader("inventoryKind", "PI");
+			param23.newDocumentLine();
+			param23.addColumnToCurrentLine("line", "10");
+			param23.addColumnToCurrentLine("m_locator_id", "1010278");
+			param23.addColumnToCurrentLine("m_product_id", "1015506");
+			param23.addColumnToCurrentLine("qtyCount", "33");
+			param23.addColumnToCurrentLine("inventorytype", "D");
+			System.out.println(lyws.inventoryCreate(param23, true));
 		}
 		catch (Exception e)
 		{

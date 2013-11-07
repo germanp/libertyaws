@@ -44,30 +44,42 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 			// Verificar si hay que enviar un mail de aviso por acumulacion de registros pendientes a replicar
 			checkForWarning();
 			
+			// Limpiar la tabla de errores viejos
+			emptyOldErrorsLog();
+			
 			// Instanciar el builder encargado de generar los XMLs a enviar a las colas
 			ReplicationBuilderWS builder = new ReplicationBuilderWS(null, this);
 			
-			// El builder se encarga de generar los XMLs para cada host destino y cargar el completeReplicationXMLDataForHost
+			// El builder se encarga de generar los XMLs para cada host destino y cargar el replicationActionsForHost
 			builder.fillDocument();
 
 			/* Iterar por todas los hosts */
-			int[] orgs = PO.getAllIDs("AD_Org", " isActive = 'Y' AND AD_Client_ID = " + getAD_Client_ID() + " AND AD_Org_ID != " + thisOrgID, null);
+			int[] orgs = PO.getAllIDs("AD_Org", " AD_Client_ID = " + getAD_Client_ID() + " AND AD_Org_ID != " + thisOrgID, null);
 			for (int i=0; i<orgs.length; i++)
 			{
 				// Recuperar posicion del host en el repArray
-				int targetrepArrayPos = MReplicationHost.getReplicationPositionForOrg(orgs[i], null);
-				if (targetrepArrayPos == -1 || builder.completeReplicationXMLDataForHost.get(targetrepArrayPos)==null)
+				int targetHost = MReplicationHost.getReplicationPositionForOrg(orgs[i], null);
+				if (targetHost == -1 || builder.replicationActionsForHost.get(targetHost)==null)
 					continue;
-				// Invocar al WS agrupando un conjunto de acciones
-				for (StringBuffer actionsXML : builder.completeReplicationXMLDataForHost.get(targetrepArrayPos)) 
+				if (!MReplicationHost.isHostActive(orgs[i], null)) {
+					saveLog(Level.INFO, false, "Omitiendo. Host inactivo: ", targetHost, true);
+					continue;
+				}
+				// Invocar al WS agrupando un conjunto de acciones según el máximo en ReplicationConstantsWS.EVENTS_PER_CALL
+				for (int currentFrame = 0; currentFrame < builder.replicationActionsForHost.get(targetHost).size(); currentFrame+=ReplicationConstantsWS.EVENTS_PER_CALL) 
 				{
 					try {
+						// Cargar la nomina de acciones
+						StringBuffer actionsXML = new StringBuffer();
+						for (int currentPos = currentFrame; currentPos < currentFrame + ReplicationConstantsWS.EVENTS_PER_CALL && currentPos < builder.replicationActionsForHost.get(targetHost).size(); currentPos++) 
+							actionsXML.append(builder.completeReplicationXMLData.get(builder.replicationActionsForHost.get(targetHost).get(currentPos)));	
+						
 						// Iniciar la transacción
 		        		rep_trxName = Trx.createTrxName();
 		        		Trx.getTrx(rep_trxName).start();
 
 		        		// Invocar al WS y actualizar los registros según corresponda
-		        		saveLog(Level.INFO, false, "Replicando registros hacia: ", orgs[i], true);
+		        		saveLog(Level.INFO, false, "Replicando registros hacia Host: ", targetHost, true);
 		        		callWSReplication(orgs[i], actionsXML, rep_trxName, ReplicationConstantsWS.TIME_OUT_BASE + ReplicationConstantsWS.EVENTS_PER_CALL * ReplicationConstantsWS.TIME_OUT_EXTRA_FACTOR);
 		        		
 		        		// Commitear la transaccion
@@ -75,13 +87,13 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 					}
 					catch (RemoteException e) {
 	            		String error = "WARNING.  Error remoto al invocar el WS: " + e + ". Error: " + e.getMessage();
-	            		saveLog(Level.SEVERE, true, error, orgs[i], true);
+	            		saveLog(Level.SEVERE, true, error, targetHost, true);
 		            	Trx.getTrx(rep_trxName).rollback();
 		            	break;		// No tiene sentido seguir intentando con este host
 					}
 					catch (Exception e) {
 	            		String error = "WARNING.  Error inesperado al procesar el mensaje: " + e + ". Error: " + e.getMessage();
-	            		saveLog(Level.SEVERE, true, error, orgs[i], true);
+	            		saveLog(Level.SEVERE, true, error, targetHost, true);
 		            	Trx.getTrx(rep_trxName).rollback();
 					}
 					finally {
@@ -379,6 +391,13 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 				sendError = "IMPOSIBLE ENVIAR MAIL A " + to + ": " + response + ". ";
 			saveLog(Level.SEVERE, true, sendError + subject + body, -1, true);
 		}
+	}
+	
+	/**
+	 * Elimina registros antiguos de la tabla de errores
+	 */
+	protected void emptyOldErrorsLog() {
+		DB.executeUpdate(" DELETE FROM AD_ReplicationError WHERE CREATED < ('now'::text)::timestamp(6) - interval '10 days'");
 	}
 	
 	

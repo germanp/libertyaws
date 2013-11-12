@@ -118,11 +118,13 @@ public class ParameterBean {
 		out.append("UserName = ").append(userName).append("; ");
 		out.append("ClientID = ").append(clientID).append("; ");
 		out.append("OrgID = ").append(orgID).append("\n");
-		out.append("  mainTable: ");
-		for (String key : mainTable.keySet())
-			out.append(key).append(" = ").
-				append(mainTable.get(key)).
-				append("; ");
+		if (mainTable!=null) {
+			out.append("  mainTable: ");
+			for (String key : mainTable.keySet())
+				out.append(key).append(" = ").
+					append(mainTable.get(key)).
+					append("; ");
+		}
 		return out.toString();
 	}
 }

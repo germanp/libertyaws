@@ -399,7 +399,8 @@ public class LibertyaWSImpl implements LibertyaWS {
 	}
 	
 	public CustomServiceResultBean customService(CustomServiceParameterBean data) {
-		return new CustomServiceHandler().customService(data);
+		CustomServiceParameterBean bean = new CustomServiceParameterBean(data.getUserName(), data.getPassword(), data.getClientID(), data.getOrgID(), data.getRawArguments());
+		return new CustomServiceHandler().customService(bean);
 	}
 
 

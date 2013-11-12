@@ -13,6 +13,7 @@ import org.libertya.ws.bean.parameter.InvoiceParameterBean;
 import org.libertya.ws.bean.parameter.OrderParameterBean;
 import org.libertya.ws.bean.parameter.ParameterBean;
 import org.libertya.ws.bean.result.BPartnerResultBean;
+import org.libertya.ws.bean.result.CustomServiceResultBean;
 import org.libertya.ws.bean.result.InvoiceResultBean;
 import org.libertya.ws.bean.result.MultipleDocumentsResultBean;
 import org.libertya.ws.bean.result.MultipleRecordsResultBean;
@@ -339,29 +340,14 @@ public class LibertyaWSClient {
 			CustomServiceParameterBean test22 = new CustomServiceParameterBean("AdminLibertya", "AdminLibertya", 1010016, 0);
 			// Nombre de la clase a invocar
 			test22.setClassName("org.libertya.example.customService.Example");
-			// Definir Argumento 1
-			ArrayList<String> argument1Value = new ArrayList<String>();
-			argument1Value.add("foo");
-			// Definir Argumento 2
-			ArrayList<String> argument2Value = new ArrayList<String>();
-			argument2Value.add("bar");
-			// Definir Argumento 3
-			ArrayList<String> argument3Value = new ArrayList<String>();
-			argument3Value.add("43");
-			// Definir Argumento 4
-			ArrayList<String> argument4Value = new ArrayList<String>();
-			argument4Value.add("x");
-			argument4Value.add("y");
-			argument4Value.add("z");
-			// Setear nomina de argumentos
-			HashMap<String, ArrayList<String>> arguments = new HashMap<String, ArrayList<String>>();
-			arguments.put("param1", argument1Value);
-			arguments.put("param2", argument2Value);
-			arguments.put("param3", argument3Value);
-			arguments.put("param4", argument4Value);
-			test22.setArguments(arguments);
+			// Especificacion de parametros
+			test22.addParameter("param1", "foo");
+			test22.addParameter("param2", "bar");
+			test22.addParameter("param3", "43");
+			test22.addParameter("param4", "x", "y", "z");
 			// Invocar al servicio
-			System.out.println(lyws.customService(test22));
+			CustomServiceResultBean customResult = lyws.customService(test22); 
+			System.out.println(customResult);
 			
 			// Prueba 23: Gestión de inventario
 			DocumentParameterBean param23 = new DocumentParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010053);

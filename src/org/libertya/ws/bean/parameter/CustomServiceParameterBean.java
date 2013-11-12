@@ -1,6 +1,7 @@
 package org.libertya.ws.bean.parameter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import org.libertya.wse.common.ListedMap;
@@ -29,8 +30,20 @@ public class CustomServiceParameterBean extends ParameterBean {
 	 * 	param3 = {'43'}<br>
 	 * 	param4 = {'9', '8', '7'}<br>
 	 * </code>
+	 * 
+	 * IMPORTANTE: Esta es una estructura interna a utilizar.  
+	 * 			   Es necesario cargar los argumentos mediante rawArguments.
 	 */
 	public HashMap<String, ArrayList<String>> arguments = new HashMap<String, ArrayList<String>>();
+
+	/**
+	 * Se usa internamente esta estructura para cargar los datos y luego se vuelca a la estructura tradicional.
+	 * El problema radica en que a Java2WSDL no le gusta el anidamiento HashMap<String, ArrayList<String>>,
+	 * y ésto hace que en el servidor en lugar de generarse un ArrayList dentro de la map, se recuperen
+	 * objetos que no son ArrayLists 
+	 */
+	public ListedMap[] rawArguments = new ListedMap[0]; 
+	
 	
 	/**
 	 * Constructor por defecto.  Ver superclase.
@@ -69,7 +82,7 @@ public class CustomServiceParameterBean extends ParameterBean {
 	public void setMethodName(String methodName) {
 		this.methodName = methodName;
 	}
-	
+		
 	public HashMap<String, ArrayList<String>> getArguments() {
 		return arguments;
 	}
@@ -77,22 +90,46 @@ public class CustomServiceParameterBean extends ParameterBean {
 	public void setArguments(HashMap<String, ArrayList<String>> arguments) {
 		this.arguments = arguments;
 	}
+
+	public ListedMap[] getRawArguments() {
+		return rawArguments;
+	}
+
+	public void setRawArguments(ListedMap[] rawArguments) {
+		this.rawArguments = rawArguments;
+	}
+	
+	public void addParameter(String argName, String ... values) {
+		rawArguments = Arrays.copyOf(rawArguments, rawArguments.length+1);
+		String[] argVals = new String[values.length];
+		int i=0;
+		for (String value : values)
+			argVals[i++] = value;
+		rawArguments[rawArguments.length-1] = new ListedMap();
+		rawArguments[rawArguments.length-1].setKey(argName);
+		rawArguments[rawArguments.length-1].setValues(argVals);
+	}
 	
 	@Override
 	public String toString() {
 		StringBuffer out = new StringBuffer(super.toString());
-		out.append("\n  ClassName: ").append(className);
-		out.append("\n  MethodName: ").append(methodName);
+		if (className!=null)
+			out.append("\n  ClassName: ").append(className);
+		if (methodName!=null)
+			out.append("\n  MethodName: ").append(methodName);
 		out.append("\n  Dynamic Arguments: ");
-		if (arguments != null)
+		if (arguments != null) {
 			for (String argName : arguments.keySet()) {
 				if (arguments.get(argName)!=null) {
 					out.append("\n ").append(argName).append(" : ");
-					for (String value : arguments.get(argName)) {
-						out.append(value).append(" ");
+					ArrayList<String> values = arguments.get(argName); 
+					for (String value : values) {
+						if (value!=null)
+							out.append(value).append(" ");
 					}
 				}
 			}
+		}
 		return out.toString();
 	}
 

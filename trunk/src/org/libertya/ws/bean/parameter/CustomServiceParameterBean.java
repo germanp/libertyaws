@@ -81,6 +81,8 @@ public class CustomServiceParameterBean extends ParameterBean {
 	@Override
 	public String toString() {
 		StringBuffer out = new StringBuffer(super.toString());
+		out.append("\n  ClassName: ").append(className);
+		out.append("\n  MethodName: ").append(methodName);
 		out.append("\n  Dynamic Arguments: ");
 		if (arguments != null)
 			for (String argName : arguments.keySet()) {

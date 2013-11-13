@@ -1,8 +1,6 @@
 package org.libertya.ws.bean.parameter;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 
 import org.libertya.wse.common.ListedMap;
 import org.openXpertya.plugin.common.CustomServiceInterface;
@@ -31,15 +29,10 @@ public class CustomServiceParameterBean extends ParameterBean {
 	 * 	param4 = {'9', '8', '7'}<br>
 	 * </code>
 	 * 
-	 * IMPORTANTE: Esta es una estructura interna a utilizar.  
-	 * 			   Es necesario cargar los argumentos mediante rawArguments.
-	 */
-	public HashMap<String, ArrayList<String>> arguments = new HashMap<String, ArrayList<String>>();
-
-	/**
-	 * Se usa internamente esta estructura para cargar los datos y luego se vuelca a la estructura tradicional.
-	 * El problema radica en que a Java2WSDL no le gusta el anidamiento HashMap<String, ArrayList<String>>,
-	 * y ésto hace que en el servidor en lugar de generarse un ArrayList dentro de la map, se recuperen
+	 * 
+	 * Se usa esta estructura para cargar los datos y luego se vuelca a la estructura tradicional en el Handler. 
+	 * El problema radica en que a Java2WSDL no le gusta el anidamiento HashMap<String, ArrayList<String>> de DynamicArgument
+	 * y ésto hace que en el servidor en lugar de generarse un ArrayList dentro de la map, se genere/recupere
 	 * objetos que no son ArrayLists 
 	 */
 	public ListedMap[] rawArguments = new ListedMap[0]; 
@@ -64,7 +57,7 @@ public class CustomServiceParameterBean extends ParameterBean {
 	 */
 	public CustomServiceParameterBean(String userName, String password, int clientID, int orgID, ListedMap[] arguments) {
 		super(userName, password, clientID, orgID);
-		load(arguments);
+		rawArguments = arguments;
 	}
 
 	public String getClassName() {
@@ -83,14 +76,6 @@ public class CustomServiceParameterBean extends ParameterBean {
 		this.methodName = methodName;
 	}
 		
-	public HashMap<String, ArrayList<String>> getArguments() {
-		return arguments;
-	}
-
-	public void setArguments(HashMap<String, ArrayList<String>> arguments) {
-		this.arguments = arguments;
-	}
-
 	public ListedMap[] getRawArguments() {
 		return rawArguments;
 	}
@@ -118,14 +103,15 @@ public class CustomServiceParameterBean extends ParameterBean {
 		if (methodName!=null)
 			out.append("\n  MethodName: ").append(methodName);
 		out.append("\n  Dynamic Arguments: ");
-		if (arguments != null) {
-			for (String argName : arguments.keySet()) {
-				if (arguments.get(argName)!=null) {
-					out.append("\n ").append(argName).append(" : ");
-					ArrayList<String> values = arguments.get(argName); 
-					for (String value : values) {
-						if (value!=null)
-							out.append(value).append(" ");
+		if (rawArguments != null) {
+			for (int i=0; i < rawArguments.length; i++) {
+				if (rawArguments[i]!=null) {
+					out.append("\n ").append(rawArguments[i].getKey()).append(" : ");
+					if (rawArguments[i].getValues()!=null) {
+						for (int j=0; j<rawArguments[i].getValues().length; j++) {
+							if (rawArguments[i].getValues()[j]!=null)
+								out.append(rawArguments[i].getValues()[j]).append(" ");
+						}
 					}
 				}
 			}
@@ -133,15 +119,4 @@ public class CustomServiceParameterBean extends ParameterBean {
 		return out.toString();
 	}
 
-	public void load(ListedMap[] arguments) {
-		for (ListedMap listedMap : arguments) {
-			ArrayList<String> aMapValue = new ArrayList<String>(); 
-			if (aMapValue != null) {
-				for (String value : listedMap.getValues())
-					aMapValue.add(value);
-			}
-			this.arguments.put(listedMap.getKey(), aMapValue);
-		}
-	}
-	
 }

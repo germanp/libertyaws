@@ -201,7 +201,7 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		Result result = new Result();
 		result.setError(resultBean.isError());
 		result.setErrorMsg(resultBean.getErrorMsg());
-		result.setResultValues(resultBean.toListedMap());
+		result.setResultValues(resultBean.getResult());
 		return result;
 	}
 }

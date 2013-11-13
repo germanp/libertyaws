@@ -2,7 +2,6 @@ package org.libertya.ws.bean.result;
 
 import java.util.HashMap;
 
-import org.libertya.wse.common.ListedMap;
 import org.libertya.wse.common.SimpleMap;
 
 public class ResultBean {

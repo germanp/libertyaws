@@ -1,9 +1,6 @@
 package org.libertya.ws.client;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import org.libertya.ws.bean.parameter.AllocationParameterBean;
 import org.libertya.ws.bean.parameter.BPartnerParameterBean;
 import org.libertya.ws.bean.parameter.CustomServiceParameterBean;

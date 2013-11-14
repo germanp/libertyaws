@@ -47,7 +47,7 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 			// Limpiar la tabla de errores viejos
 			emptyOldErrorsLog();
 			
-			// Instanciar el builder encargado de generar los XMLs a enviar a las colas
+			// Instanciar el builder encargado de generar los XMLs a enviar
 			ReplicationBuilderWS builder = new ReplicationBuilderWS(null, this);
 			
 			// El builder se encarga de generar los XMLs para cada host destino y cargar el replicationActionsForHost
@@ -515,7 +515,7 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 	protected void saveLog(Level aLevel, boolean persistError, String logMessage, Integer targetOrgPosOrID, boolean displayInTerminal) {
 		saveLog(aLevel, persistError, logMessage, targetOrgPosOrID);
 		if (displayInTerminal) {
-			if (targetOrgPosOrID > 0)
+			if (targetOrgPosOrID != null && targetOrgPosOrID > 0)
 				System.out.println("" + logMessage + ". Target: " + targetOrgPosOrID);
 			else
 				System.out.println("" + logMessage);

@@ -85,6 +85,7 @@ public class CustomServiceParameterBean extends ParameterBean {
 	}
 	
 	public void addParameter(String argName, String ... values) {
+		// rawArguments = (ListedMap[])resizeArray(rawArguments, rawArguments.length+1); <-- Java 1.5
 		rawArguments = Arrays.copyOf(rawArguments, rawArguments.length+1);
 		String[] argVals = new String[values.length];
 		int i=0;
@@ -117,6 +118,26 @@ public class CustomServiceParameterBean extends ParameterBean {
 			}
 		}
 		return out.toString();
+	}
+	
+	/**
+	* Para su utilización bajo Java 1.5, ya que no soporta Array.copyOf() 
+	* Reallocates an array with a new size, and copies the contents
+	* of the old array to the new array.
+	* @param oldArray  the old array, to be reallocated.
+	* @param newSize   the new array size.
+	* @return          A new array with the same contents.
+	*/
+	private static Object resizeArray (Object oldArray, int newSize) {
+	   int oldSize = java.lang.reflect.Array.getLength(oldArray);
+	   Class elementType = oldArray.getClass().getComponentType();
+	   Object newArray = java.lang.reflect.Array.newInstance(
+	         elementType,newSize);
+	   int preserveLength = Math.min(oldSize,newSize);
+	   if (preserveLength > 0)
+	      System.arraycopy (oldArray,0,newArray,0,preserveLength);
+
+	   return newArray; 
 	}
 
 }

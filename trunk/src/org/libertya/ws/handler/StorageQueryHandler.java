@@ -41,7 +41,7 @@ public class StorageQueryHandler extends GeneralHandler {
 				 .append(" 			sum(coalesce(s.qtyonhand,0)) as qtyonhand, ")
 				 .append(" 			sum(coalesce(s.qtyreserved,0)) as qtyreserved, ") 
 				 .append(" 			sum(coalesce(s.qtyordered,0)) as qtyordered, ")
-				 .append(" 			sum(coalesce(s.qtyonhand,0) - coalesce(s.qtyordered,0)) as qtyavailable ")
+				 .append(" 			sum(coalesce(s.qtyonhand,0) - coalesce(s.qtyreserved,0)) as qtyavailable ")
 				 .append(" FROM m_storage s ")
 				 .append(" INNER JOIN m_locator l ON l.m_locator_id = s.m_locator_id ")
 				 .append(" INNER JOIN m_product p ON p.m_product_id = s.m_product_id ")

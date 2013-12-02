@@ -81,6 +81,7 @@ public class ProductCRUDHandler extends GeneralHandler {
 			/* === Retornar valor === */
 			HashMap<String, String> result = new HashMap<String, String>();
 			result.put("M_Product_ID", Integer.toString(newProduct.getM_Product_ID()));
+			result.put("Value", newProduct.getValue());
 			return new ResultBean(false, null, result);
 		}
 		catch (ModelException me) {

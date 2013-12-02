@@ -52,6 +52,9 @@ public abstract class GeneralHandler {
 
 	/** Sufijo para detalle de campos referenciados */
 	public static final String REFERENCE_DETAIL 		= "__detail";
+	
+	/** Sufijo específico para campos referenciados con nombre Value */
+	public static final String REFERENCE_DETAIL_VALUE	= "__value";
 
 	/** Variables de entorno a recuperar */
 	public static final String ENV_OXP_HOME 			= "OXP_HOME";
@@ -527,15 +530,22 @@ public abstract class GeneralHandler {
 					{
 						// Obtener las columnas identificadoras de la tabla destino
 						StringBuffer identifierColumns = new StringBuffer("");
-						for (String identifierColumn : getIdentifierColumns(trxName, tableName))
+						for (String identifierColumn : getIdentifierColumns(getTrxName(), tableName))
 							identifierColumns.append(" COALESCE(").append(identifierColumn).append("::varchar, '') || '_' || ");
-						if (identifierColumns.length()==0)
+						// Adicionalmente, existe en la tabla referenciada la columna value?
+						int valueCol = DB.getSQLValue(getTrxName(), "SELECT count(1) " +
+																	" FROM information_schema.columns " +
+																	" WHERE table_name = '"+tableName.toLowerCase()+"'" +
+																	" AND column_name = 'value'");
+						// Si no hay identificadores y no hay columna Value, no hay nada mas que hacer
+						if (identifierColumns.length()==0 && valueCol==0)
 							continue;
-						// Borrar ultimo concatenador
-						identifierColumns.delete(identifierColumns.length()-11, identifierColumns.length()-1);
+						// Si hay identificadores, borrar ultimo concatenador
+						if (identifierColumns.length()>0)
+							identifierColumns.delete(identifierColumns.length()-11, identifierColumns.length()-1);
 						
-						// Obtener el dato referenciado y cargarlo en la map
-						String sql = " SELECT COALESCE(" + identifierColumns.toString() + ") as detail " +
+						// Obtener el dato referenciado y cargar los identificadoes en la map de detalles (y el value también si es que este existe)
+						String sql = " SELECT COALESCE(" + identifierColumns.toString() + ") as detail " + (valueCol>0?", value ":"") +
 										" FROM " + tableName + " WHERE " + columnName + " = ? ";
 						PreparedStatement ps = DB.prepareStatement(sql, getTrxName());
 						Object value;
@@ -549,8 +559,15 @@ public abstract class GeneralHandler {
 							ps.setObject(1, value);
 						}
 						ResultSet rs = ps.executeQuery();
-						if(rs.next() && rs.getString("detail") != null)
-							map.put(additionalPrefix + aColumn.getColumnName() + REFERENCE_DETAIL, rs.getString("detail"));
+						if(rs.next()) {
+							// Cargar la nomina de identificadores del registro referenciado
+							if (identifierColumns.length() > 0 && rs.getString("detail") != null)
+									map.put(additionalPrefix + aColumn.getColumnName() + REFERENCE_DETAIL, rs.getString("detail"));
+							// Cargar el value del registro referenciado
+							if (valueCol > 0 && rs.getString("value") != null)
+								map.put(additionalPrefix + aColumn.getColumnName() + REFERENCE_DETAIL_VALUE, rs.getString("value"));
+						}
+								
 					}
 				}
 				catch (Exception e) {

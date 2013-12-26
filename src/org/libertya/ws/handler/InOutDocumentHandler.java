@@ -56,8 +56,6 @@ public class InOutDocumentHandler extends DocumentHandler {
 			MBPartner aBPartner = (MBPartner)getPO("C_BPartner", bPartnerID, "value", bPartnerValue, false, true, true, false);
 			if (aBPartner == null || aBPartner.getC_BPartner_ID() == 0) 
 				aBPartner = (MBPartner)getPO("C_BPartner", bPartnerID, "taxID", taxID, false, true, true, false);
-			if (aBPartner == null || aBPartner.getC_BPartner_ID() == 0)
-				throw new Exception("No se ha podido recuperar una entidad comercial con los criterios especificados");
 
 			// Instanciar y persistir remito
 			MInOut anInOut = new MInOut(getCtx(), 0, getTrxName());
@@ -77,7 +75,8 @@ public class InOutDocumentHandler extends DocumentHandler {
 				throw new Exception("M_Warehouse_ID incorrecto");
 			Env.setContext(getCtx(), "#M_Warehouse_ID", warehouseID);
 			anInOut.setM_Warehouse_ID(warehouseID);
-			anInOut.setBPartner(aBPartner);
+			if (aBPartner != null && aBPartner.getC_BPartner_ID() > 0)
+				anInOut.setBPartner(aBPartner);
 			anInOut.setIsSOTrx(isSoTrx);
 			anInOut.setC_DocType_ID(docTypeID);
 			anInOut.setMovementType(isSoTrx ? MInOut.MOVEMENTTYPE_CustomerShipment : MInOut.MOVEMENTTYPE_VendorReceipts);

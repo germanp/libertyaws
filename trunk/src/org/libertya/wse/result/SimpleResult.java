@@ -1,6 +1,8 @@
 package org.libertya.wse.result;
 
+import org.libertya.ws.bean.result.ResultBean;
 import org.libertya.wse.common.SimpleMap;
+import org.libertya.wse.utils.MapTranslator;
 
 public class SimpleResult {
 
@@ -27,6 +29,14 @@ public class SimpleResult {
 	}
 	public void setResultValues(SimpleMap[] resultValues) {
 		this.resultValues = resultValues;
+	}
+	
+	public SimpleResult () { }
+	
+	public SimpleResult (ResultBean data) {
+		resultValues = MapTranslator.hashMap2SimpleMap(data.getMainResult());
+		error = data.isError();
+		errorMsg = data.getErrorMsg();
 	}
 	
 	

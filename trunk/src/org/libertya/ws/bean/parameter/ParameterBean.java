@@ -2,6 +2,9 @@ package org.libertya.ws.bean.parameter;
 
 import java.util.HashMap;
 
+import org.libertya.wse.common.SimpleMap;
+import org.libertya.wse.utils.MapTranslator;
+
 public class ParameterBean {
 	
 	/** Usuario LY */
@@ -36,6 +39,15 @@ public class ParameterBean {
 		this.password = password;
 		this.clientID = clientID;
 		this.orgID = orgID;
+	}
+	
+	/**
+	 * Constructor para wrapper
+	 */
+	public ParameterBean(String userName, String password, int clientID, int orgID, SimpleMap[] data)
+	{
+		this(userName, password, clientID, orgID);
+		load(data);
 	}
 	
 	/**
@@ -126,5 +138,12 @@ public class ParameterBean {
 					append("; ");
 		}
 		return out.toString();
+	}
+	
+	/**
+	 * Carga desde el wrapper
+	 */
+	public void load(SimpleMap[] data) {
+		mainTable = MapTranslator.simpleMap2HashMap(data);
 	}
 }

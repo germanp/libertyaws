@@ -11,7 +11,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
-import java.util.Vector;
 
 import org.libertya.ws.bean.parameter.ParameterBean;
 import org.libertya.ws.bean.result.ResultBean;
@@ -19,12 +18,9 @@ import org.libertya.ws.exception.ModelException;
 import org.libertya.ws.utils.LYWSContextProvider;
 import org.libertya.ws.utils.LYWSServerContext;
 import org.openXpertya.OpenXpertya;
-import org.openXpertya.model.MClient;
-import org.openXpertya.model.MSystem;
 import org.openXpertya.model.MUser;
 import org.openXpertya.model.M_Column;
 import org.openXpertya.model.M_Table;
-import org.openXpertya.model.ModelValidationEngine;
 import org.openXpertya.model.PO;
 import org.openXpertya.util.DB;
 import org.openXpertya.util.DisplayType;
@@ -182,7 +178,7 @@ public abstract class GeneralHandler {
 	  	
 	  	// Cargar el entorno basico
 	  	System.setProperty(ENV_OXP_HOME, oxpHomeDir);
-	  	if (!startupEnvironment( false ))
+	  	if (!OpenXpertya.startupEnvironment( false ))
 	  		throw new Exception ("Error al iniciar entorno (Hay conexión a Base de Datos?) ");	
 	}
 	
@@ -530,7 +526,7 @@ public abstract class GeneralHandler {
 					{
 						// Obtener las columnas identificadoras de la tabla destino
 						StringBuffer identifierColumns = new StringBuffer("");
-						for (String identifierColumn : getIdentifierColumns(getTrxName(), tableName))
+						for (String identifierColumn : M_Table.getIdentifierColumns(getTrxName(), tableName))
 							identifierColumns.append(" COALESCE(").append(identifierColumn).append("::varchar, '') || '_' || ");
 						// Adicionalmente, existe en la tabla referenciada la columna value?
 						int valueCol = DB.getSQLValue(getTrxName(), "SELECT count(1) " +
@@ -790,6 +786,33 @@ public abstract class GeneralHandler {
 		return out.toString();
 	}
 	
+	/**
+	 * Busca el valor de una columna en una map dada 
+	 * @param values la nomina de valores donde buscar
+	 * @param columnName la columna a recuperar su valor
+	 * @param lowerCaseMap si se desea pasar a minuscula la map
+	 * @param propagateException si al presentarse un error se desea propagar la exception o no
+	 * @return el valor correspondiente o -1 en CC
+	 * @throws Exception en caso de no encontrar el valor y que propagateException sea true
+	 */
+	protected int getIntValueFromMap(HashMap<String, String> values, String columnName, boolean lowerCaseMap, boolean propagateException) throws Exception {
+		// retorno por defecto
+		int retValue = -1;
+		// llevar a minusculas la map
+		if (lowerCaseMap)
+			values = toLowerCaseKeys(values);
+		try {
+			// intentar recuperar el valor
+			retValue = Integer.parseInt(values.get(columnName));
+		} catch (Exception e) {
+			// propagar la excepcion?
+			if (propagateException)
+				throw new Exception(" Error al recuperar el valor de " + columnName + ": " + e.getMessage());
+		}
+		return retValue;
+
+	}
+	
 		
 	/* ========================================== Implementacion de caches ========================================== */
 	
@@ -829,119 +852,7 @@ public abstract class GeneralHandler {
 		}
 		return table_tableID_tableName.get(tableID);
 	}
-	
-	
-	/* ========================================== Redefinicion de métodos por bugs en 11.10 ========================================== */    
-    /**
-     * 
-     * METODO CON BUG EN CLASE M_Table.
-     * """"""""""""""""""""""""""""""""
-     *   
-     * Retorna un vector con las columnas marcadas como identificador, para una tabla dada
-     * @param trxName
-     * @return
-     */
-	static HashMap<String, Vector<String>> columns = null;
-    public static Vector<String> getIdentifierColumns(String trxName, String tableName)
-    {
-    	// en cache?
-		if (columns == null || columns.get(tableName) == null)
-		{
-			
-			columns = new HashMap<String, Vector<String>>();
-			Vector<String> tempCols = new Vector<String>();
-			try
-			{
-				String sql =
-					" select c.columnname " +
-					" from ad_table t  " +
-					" inner join ad_column c on t.ad_table_id = c.ad_table_id " +
-					" where t.tablename = ? " +
-					" and c.isidentifier = 'Y' " +
-					" order by seqno ASC ";
-				
-				PreparedStatement stmt = DB.prepareStatement(sql, trxName);
-				stmt.setString(1, tableName);
-				ResultSet rs = stmt.executeQuery();
-				
-				while (rs.next())
-					tempCols.add(rs.getString(1));
-				
-				columns.put(tableName, tempCols);
-			}
-			catch (Exception e)	{
-				e.printStackTrace();
-				return columns.get(tableName);
-			}
-		}
-		return columns.get(tableName);
-    }
 
-    
-    
-    /**
-     * METODO CON BUG EN CLASE OpenXpertya.
-     * """"""""""""""""""""""""""""""""""""
-
-     * Descripción de Método
-     *
-     *
-     * @param isClient
-     *
-     * @return
-     */
-    public static boolean startupEnvironment(boolean isClient) {
-
-        OpenXpertya.startup(isClient);
-
-        if (!DB.isConnected() && !isClient) {
-        	//log.severe("No hay base de datos: desconectada");
-        	return false;
-        }
-        
-        if (!DB.isConnected()) {
-            //log.severe("No hay base de datos: desconectada");
-            System.exit(1);
-        }
-
-        // Initialize main cached Singletons
-        ModelValidationEngine.get();
-
-        try {
-
-            MSystem	system	= MSystem.get(Env.getCtx());	// Initializes Base Context too
-
-            if (isClient) {
-                MClient.get(Env.getCtx(), 0);		// Login Client loaded later
-            } else {
-                MClient.getAll(Env.getCtx());
-            }
-
-            // Document.setKey(system.getSummary());
-
-        } catch (Exception e) {
-            //log.warning("Problemas con las variables de entorno: " + e.toString());
-        }
-
-        // Start Workflow Document Manager (in other package) for PO
-        String	className	= null;
-
-        try {
-
-            className	= "org.openXpertya.wf.DocWorkflowManager";
-            Class.forName(className);
-
-            // Initialize Archive Engine
-            className	= "org.openXpertya.print.ArchiveEngine";
-            Class.forName(className);
-
-        } catch (Exception e) {
-            //log.warning("No arranca: " + className + " - " + e.getMessage());
-        }
-
-        return true;
-
-    }		// startupEnvironment
     
 } 
  

@@ -358,6 +358,55 @@ public class LibertyaWSClient {
 			param23.addColumnToCurrentLine("qtyCount", "33");
 			param23.addColumnToCurrentLine("inventorytype", "D");
 			System.out.println(lyws.inventoryCreate(param23, true));
+			
+			// Prueba 24: Direccion de EC
+			ParameterBean aLocationParam = new ParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010053);
+			aLocationParam.addColumnToMainTable("c_bpartner_id", "1012142");
+			aLocationParam.addColumnToMainTable("address1", "la direccion2");
+			aLocationParam.addColumnToMainTable("phone", "el telefono");
+			System.out.println(lyws.bPartnerLocationCreate(aLocationParam));
+			
+			// Prueba 25: Precio de artículo
+			ParameterBean priceParam = new ParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010053);
+			priceParam.addColumnToMainTable("m_product_id", "1015400");
+			priceParam.addColumnToMainTable("m_pricelist_version_id", "1010527");
+			priceParam.addColumnToMainTable("ad_org_id", "0");
+			priceParam.addColumnToMainTable("pricestd", "999.80");
+			System.out.println(lyws.productPriceCreateUpdate(priceParam));
+			
+			// Prueba 26: Orden de producción
+			DocumentParameterBean productionParam = new DocumentParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010053);
+			productionParam.addColumnToHeader("C_BPartner_ID", "1012142");
+			productionParam.addColumnToHeader("C_DocTypeTarget_ID", "1010532");
+			productionParam.addColumnToHeader("DateOrdered", "2013-12-19 11:25:00");
+			productionParam.addColumnToHeader("PriorityRule", "1");
+			productionParam.addColumnToHeader("M_Warehouse_ID", "1010048");
+			productionParam.newDocumentLine();
+			productionParam.addColumnToCurrentLine("m_product_id", "1015400");
+			productionParam.addColumnToCurrentLine("qtyordered", "97");
+			productionParam.addColumnToCurrentLine("qtyentered", "97");
+			productionParam.addColumnToCurrentLine("M_Locator_ID", "1010278");
+			System.out.println(lyws.productionOrderCreate(productionParam, true));
+			
+			// Prueba 27: Boleta de depósito
+			DocumentParameterBean depositParam = new DocumentParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010053);
+			depositParam.addColumnToHeader("C_BPartner_ID", "1012142");
+			depositParam.addColumnToHeader("C_BankAccount_ID", "1010078");
+			depositParam.addColumnToHeader("FechaDeposito", "2013-12-21 11:25:00");
+			depositParam.addColumnToHeader("c_currency_id", "118");
+			depositParam.newDocumentLine();
+			depositParam.addColumnToCurrentLine("C_Payment_ID", "1011951");
+			depositParam.addColumnToCurrentLine("c_currency_id", "118");
+			depositParam.addColumnToCurrentLine("payment_amt", "700");
+			System.out.println(lyws.depositSlipCreate(depositParam, true));
+			
+			// Prueba 28: Lista de materiales
+			ParameterBean bomParam = new ParameterBean("AdminLibertya", "AdminLibertya", 1010016, 1010053);
+			bomParam.addColumnToMainTable("m_product_id", "1015400");
+			bomParam.addColumnToMainTable("m_productbom_id", "1015401");
+			bomParam.addColumnToMainTable("bomqty", "7");
+			bomParam.addColumnToMainTable("line", "7");
+			System.out.println(lyws.billOfMaterialCreate(bomParam));			
 		}
 		catch (Exception e)
 		{

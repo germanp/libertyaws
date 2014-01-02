@@ -3,6 +3,10 @@ package org.libertya.ws.bean.parameter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.libertya.wse.common.SimpleMap;
+import org.libertya.wse.param.DocumentLine;
+import org.libertya.wse.utils.MapTranslator;
+
 public class InvoiceParameterBean extends DocumentParameterBean {
 
 	/** Otros impuestos de la factura */
@@ -23,6 +27,14 @@ public class InvoiceParameterBean extends DocumentParameterBean {
 		super(userName, password, clientID, orgID);
 	}
 
+	/**
+	 * Constructor para el wrapper
+	 */
+	public InvoiceParameterBean(String userName, String password, int clientID,	int orgID, SimpleMap[] header, DocumentLine[] lines, DocumentLine[] otherTaxes) {
+		super(userName, password, clientID, orgID, header, lines);
+		load(otherTaxes);
+	}
+	
 	/**
 	 * Crea una nueva línea de otros impuestos, correspondiente a un conjunto de pares columna / valor
 	 */
@@ -65,5 +77,13 @@ public class InvoiceParameterBean extends DocumentParameterBean {
 							append("; ");
 				}
 		return out.toString();
+	}
+	
+	public void load(DocumentLine[] taxes) {
+		// Cargar impuestos
+		if (otherTaxes!=null) {
+			for (DocumentLine aTax : taxes)
+				otherTaxes.add(MapTranslator.simpleMap2HashMap(aTax.getContent()));
+		}
 	}
 }

@@ -810,6 +810,176 @@ public interface LibertyaWS {
 	 */
 	public ResultBean inventoryVoidByColumn(ParameterBean data, String columnName, String value);
 	
+
+	/* ================================================================== */
+	/* ====================== Direcciones de EC ========================= */
+	/* ================================================================== */
+	
+	/**
+	 * Alta de una dirección de entidad comercial
+	 * @param data parametros correspondientes a la direccion
+	 * @return ResultBean con OK C_BPartner_Location_ID o ERROR en caso de error.
+	 */
+	public ResultBean bPartnerLocationCreate(ParameterBean data);
+	
+	/**
+	 * Actualización de una dirección de entidad comercial
+	 * @param data parametros correspondientes a la direccion
+	 * @param bPartnerLocationID id de la dirección de la EC
+	 * @return ResultBean con OK o ERROR en caso de error.
+	 */
+	public ResultBean bPartnerLocationUpdate(ParameterBean data, int bPartnerLocationID);
+	
+	/**
+	 * Eliminación logica de una dirección de entidad comercial
+	 * @param data parametros de acceso
+	 * @param bPartnerLocationID id de la dirección de la EC
+	 * @return ResultBean con OK o ERROR en caso de error.
+	 */
+	public ResultBean bPartnerLocationDelete(ParameterBean data, int bPartnerLocationID);
+	
+	/**
+	 * Recuperar una dirección de entidad comercial
+	 * @param data parametros de acceso
+	 * @param bPartnerLocationID id de la dirección de la EC
+	 * @return ResultBean con el detalle o ERROR en caso de error.
+	 */
+	public ResultBean bPartnerLocationRetrieve(ParameterBean data, int bPartnerLocationID);
+
+	
+	/* ================================================================== */
+	/* ===================== Precios de artículos ======================= */
+	/* ================================================================== */
+	
+	/**
+	 *  Crea o actualiza el precio de un artículo.
+	 * 	La operación primero busca si el artículo ya tiene un precio asignado 
+	 *  para la versión de tarifa parámetro, si lo tiene, entonces modifica el 
+	 *  precio con el nuevo valor, si no lo tiene entonces crea el registro de 
+	 *  precio para el artículo en esa tarifa.
+	 *  
+	 *  Respecto de los campos de Precio tenemos que:
+	 * 		PriceList: si no se envía se asgina su valor a lo que se envíe en PriceStd
+	 * 		PriceStd: es el único precio obligatorio en la operación
+	 * 		PriceLimit: si no se envía se asigna cero, haciendo que el producto se pueda vender a cualquier precio.
+     *
+	 * @param data parametros del precio a crear o actualizar
+	 * @return ResultBean con OK o ERROR en caso de error.
+	 */
+	public ResultBean productPriceCreateUpdate(ParameterBean data);
+	
+	/**
+	 * Borrado logico del precio de un artículo
+	 * @param data parametros de acceso
+	 * @param productID id del producto
+	 * @param priceListVersionID id de la lista de precio
+	 * @return ResultBean OK o ERROR en caso de error.
+	 */
+	public ResultBean productPriceDelete(ParameterBean data, int productID, int priceListVersionID);
+
+	/**
+	 * Recupera los datos del precio de un artículo
+	 * @param data parametros de acceso
+	 * @param productID id del producto
+	 * @param priceListVersionID id de la lista de precio
+	 * @return ResultBean con el detalle o ERROR en caso de error.
+	 */
+	public ResultBean productPriceRetrieve(ParameterBean data, int productID, int priceListVersionID);
+	
+
+	/* ================================================================== */
+	/* ===================== Ordenes de Producción ====================== */
+	/* ================================================================== */
+	
+	/**
+	 * Crea una orden de producción
+	 * @param data parametros de la orden a generar
+	 * @param completeProductionOrder indica si se desea completar la orden de produccion
+	 * @return ResultBean OK, C_Production_Order_ID y ProductionOrder_DocumentNo o ERROR en caso de error.
+	 */
+	public ResultBean productionOrderCreate(DocumentParameterBean data, boolean completeProductionOrder);
+	
+	/**
+	 * Elimina una orden de producción
+	 * @param data parametros de acceso
+	 * @param productionOrderID id de la orden de producción
+	 * @return ResultBean OK o ERROR en caso de error.
+	 */
+	public ResultBean productionOrderDelete(ParameterBean data, int productionOrderID);
+
+	/**
+	 * Completa una orden de producción
+	 * @param data parametros de acceso
+	 * @param productionOrderID id de la orden de producción
+	 * @return ResultBean OK o ERROR en caso de error.
+	 */
+	public ResultBean productionOrderComplete(ParameterBean data, int productionOrderID);
+	
+	/**
+	 * Anula una orden de producción
+	 * @param data parametros de acceso
+	 * @param productionOrderID id de la orden de producción
+	 * @return ResultBean OK o ERROR en caso de error.
+	 */
+	public ResultBean productionOrderVoid(ParameterBean data, int productionOrderID);
+	
+	
+	/* ================================================================== */
+	/* ====================== Boletas de depósito ======================= */
+	/* ================================================================== */
+	
+	/**
+	 * Crea una boleta de depósito
+	 * @param data parametros de la boleta de depósito
+	 * @param completeDepositSlip indica si se desea completar al boleta de depósito
+	 * @return ResultBean OK, M_BoletaDeposito_ID y BoletaDeposito_DocumentNo o ERROR en caso de error.
+	 */
+	public ResultBean depositSlipCreate(DocumentParameterBean data, boolean completeDepositSlip);
+	
+	/**
+	 * Elimina una boleta de depósito
+	 * @param data parametros de acceso
+	 * @param depositSlipID id de la boleta de depósito
+	 * @return ResultBean OK o ERROR en caso de error.
+	 */
+	public ResultBean depositSlipDelete(ParameterBean data, int depositSlipID);
+
+	/**
+	 * Completa una boleta de depósito
+	 * @param data parametros de acceso
+	 * @param depositSlipID id de la boleta de depósito
+	 * @return ResultBean OK o ERROR en caso de error.
+	 */
+	public ResultBean depositSlipComplete(ParameterBean data, int depositSlipID);
+	
+	/**
+	 * Anula una boleta de depósito
+	 * @param data parametros de acceso
+	 * @param depositSlipID id de la boleta de depósito
+	 * @return ResultBean OK o ERROR en caso de error.
+	 */
+	public ResultBean depositSlipVoid(ParameterBean data, int depositSlipID);
+	
+	
+	/* ================================================================== */
+	/* ====================== Lista de materiales ======================= */
+	/* ================================================================== */
+	
+	/**
+	 * Adiciona una entrada a la configuración LDM para un artículo dado
+	 * @param data datos a incorporar
+	 * @return ResultBean OK y M_Product_BOM_ID o ERROR en caso de error.  
+	 */
+	public ResultBean billOfMaterialCreate(ParameterBean data);	
+
+	/**
+	 * Elimina una entrada en la configuración LDM
+	 * @param data datos de acceso
+	 * @param productBOMId M_Product_BOM_ID a eliminar
+	 * @return ResultBean OK o ERROR en caso de error.  
+	 */
+	public ResultBean billOfMaterialDelete(ParameterBean data, int productBOMId);
+	
 	
 	/* ================================================================== */
 	/* ========================= Replicación ============================ */

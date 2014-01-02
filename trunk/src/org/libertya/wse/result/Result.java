@@ -1,5 +1,6 @@
 package org.libertya.wse.result;
 
+import org.libertya.ws.bean.result.CustomServiceResultBean;
 import org.libertya.wse.common.ListedMap;
 
 public class Result {
@@ -30,5 +31,11 @@ public class Result {
 		this.resultValues = resultValues;
 	}
 	
+	public Result() { };
 	
+	public Result (CustomServiceResultBean data) {
+		error = data.isError();
+		errorMsg = data.getErrorMsg();
+		resultValues = data.getResult();
+	}
 }

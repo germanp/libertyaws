@@ -3,6 +3,7 @@ package org.libertya.ws.bean.result;
 import java.util.HashMap;
 
 import org.libertya.wse.common.SimpleMap;
+import org.libertya.wse.utils.MapTranslator;
 
 public class ResultBean {
 
@@ -94,17 +95,10 @@ public class ResultBean {
 		table.put(columnName, columnValue);
 	}
 	
+	/**
+	 * Volcado al wrapper
+	 */
 	public SimpleMap[] toSimpleMap() {
-		int i=0;
-		SimpleMap[] retValue = new SimpleMap[mainResult.size()];
-		if (mainResult != null) {
-			for (String argName : mainResult.keySet()) {
-				SimpleMap aMap = new SimpleMap();
-				aMap.setKey(argName);
-				aMap.setValue(mainResult.get(argName));
-				retValue[i++] = aMap;
-			}
-		}
-		return retValue;
+		return MapTranslator.hashMap2SimpleMap(mainResult);
 	}
 }

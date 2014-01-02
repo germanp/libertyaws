@@ -60,6 +60,15 @@ public class CustomServiceParameterBean extends ParameterBean {
 		rawArguments = arguments;
 	}
 
+	/**
+	 * Constructor para wrapper 
+	 */
+	public CustomServiceParameterBean(String userName, String password, int clientID, int orgID, ListedMap[] arguments, String className) {
+		super(userName, password, clientID, orgID);
+		rawArguments = arguments;
+		this.className = className;
+	}
+
 	public String getClassName() {
 		return className;
 	}

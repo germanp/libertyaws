@@ -2,6 +2,10 @@ package org.libertya.ws.bean.parameter;
 
 import java.util.HashMap;
 
+import org.libertya.wse.common.SimpleMap;
+import org.libertya.wse.param.DocumentLine;
+import org.libertya.wse.utils.MapTranslator;
+
 public class BPartnerParameterBean extends ParameterBean {
 
 	/** Coleccion para las subtablas C_BPartnerLocation y C_Location */
@@ -21,6 +25,11 @@ public class BPartnerParameterBean extends ParameterBean {
 		super(userName, password, clientID, orgID);
 	}
 
+	public BPartnerParameterBean(String userName, String password, int clientID, int orgID, SimpleMap[] data, SimpleMap[] location) {
+		super(userName, password, clientID, orgID);
+		load(data, location);
+	}
+	
 	/**
 	 * Incorpora una nueva columna a los datos de parámetro la E.C. 
 	 * @param columnName nombre de la columna
@@ -71,8 +80,12 @@ public class BPartnerParameterBean extends ParameterBean {
 			out.append(key).append(" = ").
 				append(location.get(key)).
 				append("; ");
-		return out.toString();
-
-		
+		return out.toString();		
+	}
+	
+	
+	public void load(SimpleMap[] data, SimpleMap[] location) {
+		super.load(data);
+		this.location = MapTranslator.simpleMap2HashMap(location);
 	}
 }

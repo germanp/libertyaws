@@ -3,6 +3,10 @@ package org.libertya.ws.bean.parameter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.libertya.wse.common.RecordContent;
+import org.libertya.wse.common.SimpleMap;
+import org.libertya.wse.utils.MapTranslator;
+
 public class AllocationParameterBean extends ParameterBean {
 
 	/* Constantes utilizadas para especificar el tipo de anulacion de recibos de cliente */
@@ -38,6 +42,13 @@ public class AllocationParameterBean extends ParameterBean {
 		super(userName, password, clientID, orgID);
 	}
 
+	/**
+	 * Constructor para wrapper
+	 */
+	public AllocationParameterBean(String userName, String password, int clientID,	int orgID, SimpleMap[] data, RecordContent[] invoices, RecordContent[] payments) {
+		super(userName, password, clientID, orgID);
+		load(invoices, payments);
+	}
 	
 	
 	/**
@@ -141,6 +152,19 @@ public class AllocationParameterBean extends ParameterBean {
 							append("; ");
 				}
 		return out.toString();
+	}
+	
+	public void load(RecordContent[] invs, RecordContent[] pays) {
+		if (invs != null) {
+			for (RecordContent anInvoice : invs) {
+				invoices.add(MapTranslator.simpleMap2HashMap(anInvoice.getData()));
+			}
+		}
+		if (pays != null) {
+			for (RecordContent aPayment : pays) {
+				payments.add(MapTranslator.simpleMap2HashMap(aPayment.getData()));
+			}
+		}		
 	}
 	
 }

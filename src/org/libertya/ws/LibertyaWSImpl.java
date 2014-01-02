@@ -21,7 +21,10 @@ import org.libertya.ws.bean.result.StorageResultBean;
 import org.libertya.ws.handler.AllocationDocumentHandler;
 import org.libertya.ws.handler.BPartnerBalanceHandler;
 import org.libertya.ws.handler.BPartnerCRUDHandler;
+import org.libertya.ws.handler.BPartnerLocationCRUDHandler;
+import org.libertya.ws.handler.BillOfMaterialCRUDHandler;
 import org.libertya.ws.handler.CustomServiceHandler;
+import org.libertya.ws.handler.DepositSlipDocumentHandler;
 import org.libertya.ws.handler.DocumentQueryHandler;
 import org.libertya.ws.handler.GeneralRecordQueryHandler;
 import org.libertya.ws.handler.InOutDocumentHandler;
@@ -29,6 +32,8 @@ import org.libertya.ws.handler.InventoryDocumentHandler;
 import org.libertya.ws.handler.InvoiceDocumentHandler;
 import org.libertya.ws.handler.OrderDocumentHandler;
 import org.libertya.ws.handler.ProductCRUDHandler;
+import org.libertya.ws.handler.ProductPriceCRUDHandler;
+import org.libertya.ws.handler.ProductionOrderDocumentHandler;
 import org.libertya.ws.handler.ReplicationServerHandler;
 import org.libertya.ws.handler.StorageQueryHandler;
 import org.libertya.ws.handler.UserCRUDHandler;
@@ -351,7 +356,7 @@ public class LibertyaWSImpl implements LibertyaWS {
 	}
 	
 	/* ================================================================== */
-	/* ============================ Stock =============================== */
+	/* ========================= Inventario ============================= */
 	/* ================================================================== */
 	
 	public ResultBean inventoryCreate(DocumentParameterBean data, boolean completeInventory) {
@@ -382,6 +387,94 @@ public class LibertyaWSImpl implements LibertyaWS {
 		return new InventoryDocumentHandler().inventoryVoidByColumn(data, columnName, value);
 	}
 	
+	/* ================================================================== */
+	/* ====================== Direcciones de EC ========================= */
+	/* ================================================================== */
+	
+	public ResultBean bPartnerLocationCreate(ParameterBean data) {
+		return new BPartnerLocationCRUDHandler().bPartnerLocationCreate(data);
+	}
+
+	public ResultBean bPartnerLocationUpdate(ParameterBean data, int bPartnerLocationID) {
+		return new BPartnerLocationCRUDHandler().bPartnerLocationUpdate(data, bPartnerLocationID);
+	}
+
+	public ResultBean bPartnerLocationDelete(ParameterBean data, int bPartnerLocationID) {
+		return new BPartnerLocationCRUDHandler().bPartnerLocationDelete(data, bPartnerLocationID);
+	}
+
+	public ResultBean bPartnerLocationRetrieve(ParameterBean data, int bPartnerLocationID) {
+		return new BPartnerLocationCRUDHandler().bPartnerLocationRetrieve(data, bPartnerLocationID);
+	}
+
+	/* ================================================================== */
+	/* ===================== Precios de artículos ======================= */
+	/* ================================================================== */
+	
+	public ResultBean productPriceCreateUpdate(ParameterBean data) {
+		return new ProductPriceCRUDHandler().productPriceCreateUpdate(data);
+	}
+
+	public ResultBean productPriceDelete(ParameterBean data, int productID, int priceListVersionID) {
+		return new ProductPriceCRUDHandler().productPriceDelete(data, productID, priceListVersionID);
+	}
+
+	public ResultBean productPriceRetrieve(ParameterBean data, int productID, int priceListVersionID) {
+		return new ProductPriceCRUDHandler().productPriceRetrieve(data, productID, priceListVersionID); 
+	}
+
+	/* ================================================================== */
+	/* ===================== Ordenes de Producción ====================== */
+	/* ================================================================== */
+	
+	public ResultBean productionOrderCreate(DocumentParameterBean data, boolean completeProductionOrder) {
+		return new ProductionOrderDocumentHandler().productionOrderCreate(data, completeProductionOrder);
+	}
+
+	public ResultBean productionOrderDelete(ParameterBean data, int productionOrderID) {
+		return new ProductionOrderDocumentHandler().productionOrderDelete(data, productionOrderID);
+	}
+
+	public ResultBean productionOrderComplete(ParameterBean data, int productionOrderID) {
+		return new ProductionOrderDocumentHandler().productionOrderComplete(data, productionOrderID);
+	}
+
+	public ResultBean productionOrderVoid(ParameterBean data, int productionOrderID) {
+		return new ProductionOrderDocumentHandler().productionOrderVoid(data, productionOrderID);
+	}
+
+	/* ================================================================== */
+	/* ====================== Boletas de depósito ======================= */
+	/* ================================================================== */
+	
+	public ResultBean depositSlipCreate(DocumentParameterBean data, boolean completeDepositSlip) {
+		return new DepositSlipDocumentHandler().depositSlipCreate(data, completeDepositSlip);
+	}
+
+	public ResultBean depositSlipDelete(ParameterBean data, int depositSlipID) {
+		return new DepositSlipDocumentHandler().depositSlipDelete(data, depositSlipID);
+	}
+
+	public ResultBean depositSlipComplete(ParameterBean data, int depositSlipID) {
+		return new DepositSlipDocumentHandler().depositSlipComplete(data, depositSlipID);
+	}
+
+	public ResultBean depositSlipVoid(ParameterBean data, int depositSlipID) {
+		return new DepositSlipDocumentHandler().depositSlipVoid(data, depositSlipID);
+	}
+
+	/* ================================================================== */
+	/* ====================== Lista de materiales ======================= */
+	/* ================================================================== */
+
+	public ResultBean billOfMaterialCreate(ParameterBean data) {
+		return new BillOfMaterialCRUDHandler().billOfMaterialCreate(data);
+	}
+
+	public ResultBean billOfMaterialDelete(ParameterBean data, int productBOMId) {
+		return new BillOfMaterialCRUDHandler().billOfMaterialDelete(data, productBOMId);
+	}
+
 	/* ================================================================== */
 	/* ========================= Replicación ============================ */
 	/* ================================================================== */

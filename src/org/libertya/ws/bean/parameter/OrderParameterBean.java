@@ -1,5 +1,8 @@
 package org.libertya.ws.bean.parameter;
 
+import org.libertya.wse.common.SimpleMap;
+import org.libertya.wse.param.DocumentLine;
+
 public class OrderParameterBean extends DocumentParameterBean {
 
 	
@@ -34,6 +37,18 @@ public class OrderParameterBean extends DocumentParameterBean {
 		super(userName, password, clientID, orgID);
 	}
 	
+	/**
+	 * Constructor para wrapper
+	 */
+	public OrderParameterBean(String userName, String password, int clientID, int orgID, SimpleMap[] header, DocumentLine[] lines, int invoiceDocTypeTargetID, int invoicePuntoDeVenta, String invoiceTipoComprobante)
+	{
+		super(userName, password, clientID, orgID);
+		load(header, lines);
+		this.invoiceDocTypeTargetID = invoiceDocTypeTargetID;
+		this.invoicePuntoDeVenta = invoicePuntoDeVenta;
+		this.invoiceTipoComprobante = invoiceTipoComprobante;
+	}
+
 	
 	/** Basic getter para el tipo de documento de la factura */
 	public int getInvoiceDocTypeTargetID() {

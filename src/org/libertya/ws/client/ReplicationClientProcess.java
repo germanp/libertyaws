@@ -20,6 +20,7 @@ import org.openXpertya.replication.ReplicationConstants;
 import org.openXpertya.replication.ReplicationConstantsWS;
 import org.openXpertya.replication.ReplicationTableManager;
 import org.openXpertya.replication.ReplicationUtils;
+import org.openXpertya.util.CLogger;
 import org.openXpertya.util.DB;
 import org.openXpertya.util.EMail;
 import org.openXpertya.util.Env;
@@ -463,11 +464,11 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 	  	String oxpHomeDir = System.getenv("OXP_HOME"); 
 	  	if (oxpHomeDir == null)
 	  		showHelp("ERROR: La variable de entorno OXP_HOME no está seteada ");
-	
+
 	  	// Cargar el entorno basico
 	  	System.setProperty("OXP_HOME", oxpHomeDir);
 	  	if (!OpenXpertya.startupEnvironment( false ))
-	  		showHelp("ERROR: Error al iniciar la configuracion de replicacion ");
+	  		showHelp("ERROR: Error al iniciar el ambiente cliente.  Revise la configuración");
 
 	  	// Configuracion 
 	  	Env.setContext(Env.getCtx(), "#AD_Client_ID", DB.getSQLValue(null, " SELECT AD_Client_ID FROM AD_ReplicationHost WHERE thisHost = 'Y' "));
@@ -495,7 +496,7 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 				"\n" + 	
 				" ------------ FRAMEWORK DE REPLICACION VIA WS. MODO DE INSTANCIACION DEL PROCESO CLIENTE --------------- " +
 				" Ejemplos de uso de proceso origen (caso tipico de uso y parametros completos): \n" +
-				" java -classpath lib/OXP.jar:lib/OXPLib.jar:lib/OXPXLib.jar org.libertya.ws.client.ReplicationClientProcess " + PARAM_EVENTS_PER_CALL + "500 " + PARAM_TIMEOUT_BASE + "120000 " + PARAM_MAX_RECORDS + "1500 " + PARAM_REPLICATE_TABLE + "C_Invoice " + PARAM_REPLICATE_RECORD + "h1_1394_C_Invoice " + PARAM_REPLICATE_HOST + "2 \n" +
+				" java -classpath ../../lib/OXP.jar:../../lib/OXPLib.jar:../../lib/OXPXLib.jar:lib/repClient.jar:lib/lyws.jar org.libertya.ws.client.ReplicationClientProcess " + PARAM_EVENTS_PER_CALL + "500 " + PARAM_TIMEOUT_BASE + "120000 " + PARAM_MAX_RECORDS + "1500 " + PARAM_REPLICATE_TABLE + "C_Invoice " + PARAM_REPLICATE_RECORD + "h1_1394_C_Invoice " + PARAM_REPLICATE_HOST + "2 \n" +
 				" donde \n" +
 				" " + PARAM_EVENTS_PER_CALL  + "    es la cantidad de eventos que se envian en una misma llamada al WS. Si no se especifica, el valor por defecto es " + ReplicationConstantsWS.EVENTS_PER_CALL + ".  Si la cantidad de registros es mayor que este valor, se realizarán varias llamadas independientes (en distintas transacciones). \n" +
 				" " + PARAM_TIMEOUT_BASE     + "    redefinicion del timeout base para la invocación al WS (milisegundos). Si no se especifica, el valor por defecto es " + ReplicationConstantsWS.TIME_OUT_BASE + ". A este valor se le adiciona el parametro "+PARAM_EVENTS_PER_CALL+" * " + ReplicationConstantsWS.TIME_OUT_EXTRA_FACTOR + " \n" +

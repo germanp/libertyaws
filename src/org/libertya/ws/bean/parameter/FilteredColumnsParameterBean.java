@@ -21,6 +21,15 @@ public class FilteredColumnsParameterBean extends ParameterBean {
 	public FilteredColumnsParameterBean(String userName, String password, int clientID,	int orgID) {
 		super(userName, password, clientID, orgID);
 	}
+
+	/**
+	 * Constructor para wrapper
+	 */
+	public FilteredColumnsParameterBean(String userName, String password, int clientID,	int orgID, String[] filterColumns) {
+		super(userName, password, clientID, orgID);
+		load(filterColumns);
+	}
+	
 	
 	/**
 	 * Incorpora una nueva columna a la nómina de columnas a incluir
@@ -51,5 +60,11 @@ public class FilteredColumnsParameterBean extends ParameterBean {
 					out.append("\n    " + column);
 		return out.toString();
 	}
-	
+
+	public void load(String[] columns) {
+		if (columns != null) {
+			for (String aColumn : columns) 
+				filterColumns.add(aColumn);
+		}
+	}
 }

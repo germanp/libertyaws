@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import org.libertya.wse.common.SimpleMap;
 import org.libertya.wse.param.DocumentLine;
+import org.libertya.wse.utils.MapTranslator;
 
 public class DocumentParameterBean extends ParameterBean {
 
@@ -88,19 +89,11 @@ public class DocumentParameterBean extends ParameterBean {
 	
 	public void load(SimpleMap[] header, DocumentLine[] lines) {
 		// Cargar la cabecera
-		if (header != null) {
-			for (SimpleMap simpleMap : header)
-				mainTable.put(simpleMap.getKey(), simpleMap.getValue());
-		}
+		mainTable = MapTranslator.simpleMap2HashMap(header);
 		// Cargar las lineas
 		if (lines != null) {
-			for (DocumentLine aLine : lines) {
-				HashMap<String, String> newLine = new HashMap<String, String>();
-				for (SimpleMap aLineContent : aLine.getContent()) {
-					newLine.put(aLineContent.getKey(), aLineContent.getValue());
-				}
-				documentLines.add(newLine);
-			}
+			for (DocumentLine aLine : lines)
+				documentLines.add(MapTranslator.simpleMap2HashMap(aLine.getContent()));				
 		}
 	}
 	

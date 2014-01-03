@@ -221,6 +221,13 @@ public class InvoiceDocumentHandler extends DocumentHandler {
 			anInvoice.setIsSOTrx(true);
 			anInvoice.setDateInvoiced(dateInvoiced);
 			anInvoice.setC_DocTypeTarget_ID(docTypeTargetID);
+			// Setear tipo de comprobante y punto de venta si es que vienen en la map
+			try {
+				anInvoice.setTipoComprobante(toLowerCaseKeys(data.getMainTable()).get("tipocomprobante"));
+			} catch (Exception e) { } 
+			try {
+				anInvoice.setPuntoDeVenta(Integer.parseInt(toLowerCaseKeys(data.getMainTable()).get("puntodeventa")));
+			} catch (Exception e) { } 
 			// Copia general de campos de cabecera
 			CreateFromInvoice.copyHeaderValuesFromOrder(anInvoice, anOrder, getCtx(), getTrxName());
 			

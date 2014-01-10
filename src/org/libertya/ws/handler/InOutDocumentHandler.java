@@ -9,6 +9,7 @@ import org.libertya.ws.exception.ModelException;
 import org.openXpertya.model.MBPartner;
 import org.openXpertya.model.MInOut;
 import org.openXpertya.model.MInOutLine;
+import org.openXpertya.model.X_C_Order;
 import org.openXpertya.process.DocAction;
 import org.openXpertya.process.DocumentEngine;
 import org.openXpertya.util.CLogger;
@@ -66,13 +67,27 @@ public class InOutDocumentHandler extends DocumentHandler {
 			} catch (Exception e) { throw new Exception("C_DocTypeTarget_ID no especificado"); }
 			if (docTypeID <= 0)
 				throw new Exception("C_DocTypeTarget_ID incorrecto");
-			// Setear warehouse en el contexto
+			// Setear warehouse en el contexto (si viene especificado explicitamente o mediante el warehouse del pedido)
 			int warehouseID = -1;
 			try {
-				warehouseID = Integer.parseInt(toLowerCaseKeys(data.getMainTable()).get("m_warehouse_id"));
-			} catch (Exception e) { throw new Exception("M_Warehouse_ID no especificado"); }
+				// Setear el warehouse a partir del dato recibido en la map
+				if (toLowerCaseKeys(data.getMainTable()).get("m_warehouse_id") != null) {
+					warehouseID = Integer.parseInt(toLowerCaseKeys(data.getMainTable()).get("m_warehouse_id"));
+				}
+				// Setear el warehouse a partir del warehouse del pedido 
+				if (warehouseID <= 0) {
+					int orderID = -1;
+					if (toLowerCaseKeys(data.getMainTable()).get("c_order_id") != null) {
+						orderID = Integer.parseInt(toLowerCaseKeys(data.getMainTable()).get("c_order_id"));
+					} 
+					if (orderID > 0) {
+						X_C_Order anOrder = new X_C_Order(getCtx(), orderID, getTrxName());
+						warehouseID = anOrder.getM_Warehouse_ID();
+					}
+				}
+			} catch (Exception e) { throw new Exception("Error al determinar el M_Warehouse_ID a utilizar en la creacion del remito"); }
 			if (warehouseID <= 0)
-				throw new Exception("M_Warehouse_ID incorrecto");
+				throw new Exception("Imposible determinar M_Warehouse_ID.  Indicar uno explicitamente o especificar el pedido asociado al remito");
 			Env.setContext(getCtx(), "#M_Warehouse_ID", warehouseID);
 			anInOut.setM_Warehouse_ID(warehouseID);
 			if (aBPartner != null && aBPartner.getC_BPartner_ID() > 0)

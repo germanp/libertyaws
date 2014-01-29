@@ -58,7 +58,17 @@ public abstract class GeneralHandler {
 	
 	/** Cantidad de decimales a utilizar y metodo de redondeo */
 	protected static final int BD_SCALE 				= 2;
-	protected static final RoundingMode BD_ROUND_MODE 	= RoundingMode.HALF_EVEN; 
+	protected static final RoundingMode BD_ROUND_MODE 	= RoundingMode.HALF_EVEN;
+	
+	/** Especificando una columna con alguno de estos dos sufijos 
+	 *  permite buscar la referencia por un criterio diferente a su ID
+	 * 
+	 * Ejemplos:
+	 * 		bean.addColumnToHeader("M_Warehouse_ID__byValue", 	"Standard");
+	 * 		bean.addColumnToHeader("CreatedBy__byName", 		"Supervisor"); 
+	 */
+	public static final String REF_SPECIFIED_BY_VALUE 	= "__byValue";
+	public static final String REF_SPECIFIED_BY_NAME 	= "__byName";
 	
 	/**
 	 * Realiza la configuración inicial a partir de la información recibida
@@ -256,13 +266,34 @@ public abstract class GeneralHandler {
 		// recorrer las columnas y cargar los datos con el array de valores recibido
 		for (M_Column aColumn : columns)
 		{
+			// Existe el valor en la map?
+			boolean containsKey = false;
+			String value = null;
+			
 			// Intentar setear el valor para la columna (si está dentro de los recibidos como parametro)
 			if (map.keySet().contains(aColumn.getColumnName().toLowerCase()))
 			{
 				// Castear el string recibido al tipo que corresponda, y determinar si fue posible o no mediante ok
 				// El valor del parametro puede ser null, de tipo String, Integer, BigDecimal, Timestamp o byte[]
-				String value = map.get(aColumn.getColumnName().toLowerCase());
-				
+				containsKey = true;
+				value = map.get(aColumn.getColumnName().toLowerCase());
+			}
+			// Intentar setear el valor para la columna referencial, especificado por su value (si está dentro de los recibidos como parametro)
+			else if (map.keySet().contains(aColumn.getColumnName().toLowerCase() + REF_SPECIFIED_BY_VALUE.toLowerCase())) 
+			{
+				containsKey = true;
+				value = retrieveIDByField(aColumn, "value", map.get(aColumn.getColumnName().toLowerCase() + REF_SPECIFIED_BY_VALUE.toLowerCase()));
+			}
+			// Intentar setear el valor para la columna referencial, especificado por su name (si está dentro de los recibidos como parametro)
+			else if (map.keySet().contains(aColumn.getColumnName().toLowerCase() + REF_SPECIFIED_BY_NAME.toLowerCase())) 
+			{
+				containsKey = true;
+				value = retrieveIDByField(aColumn, "name", map.get(aColumn.getColumnName().toLowerCase() + REF_SPECIFIED_BY_NAME.toLowerCase()));
+			}
+			
+			// Si hay un valor especificado, entonces setearlo
+			if (containsKey)
+			{
 				// Si el valor alojado en la columna es el mismo que el ya existente, omitir el set_Value; 
 				if (po.get_ValueAsString(aColumn.getColumnName()).equals(value))
 					continue;
@@ -416,6 +447,43 @@ public abstract class GeneralHandler {
 	}
 	
 	/**
+	 * Retorna el ID de un registro a partir de su value, name, etc.
+	 * @param aColumn columna que referencia a otro registro
+	 * @param fieldName campo por el cual determinar el registro a buscar su ID
+	 * @param fieldValue valor del campo por el cual determinar el registro a buscar su ID
+	 * @return el ID del registro o -1 en caso contrario
+	 */
+	protected String retrieveIDByField(M_Column aColumn, String fieldName, String fieldValue) 
+	{
+		// Valor por defecto
+		final String DEFAULT_RETVALUE = "-1";
+		
+		// Sin la info en cuestión, imposible continuar
+		if (aColumn==null || fieldName==null || fieldValue==null || fieldName.length()==0 || fieldValue.length()==0)
+			return DEFAULT_RETVALUE;
+		
+		try {
+			// Recuperar nombre de tabla y columna referenciada
+			ArrayList<String> reference = getReferencedColumnAndTableName(aColumn);
+			String tableName = reference.get(0);
+			String columnName = reference.get(1);
+
+			// si se obtuvo una referencia válida, recuperar el dato
+			if (columnName!=null && tableName!=null && columnName.length()>0 && tableName.length() > 0) {
+				Integer recordID = DB.getSQLValue(getTrxName(), "SELECT " + columnName + " FROM " + tableName + " WHERE " + fieldName + " = '" + fieldValue + "'" + " AND AD_Client_ID IN (0, " + Env.getAD_Client_ID(getCtx()) + ")");
+				return recordID.toString();
+			}
+		}
+		catch (Exception e) {
+			System.err.println("Error en retrieveIDByField: " + e.toString());
+			return DEFAULT_RETVALUE;	
+		}
+		// -1 si no hay nada que hacer
+		return DEFAULT_RETVALUE;
+	}
+	
+	
+	/**
 	 * Pasa a minuscula todas las keys de una map
 	 * @param map la map a convertir
 	 * @return la misma map, pero con las keys pasadas a minuscula
@@ -503,24 +571,10 @@ public abstract class GeneralHandler {
 			{
 				try
 				{
-					String tableName = null;
-					String columnName = null;
-					// Si la columna termina en _ID la tabla referenciada se determina de manera directa
-					if(aColumn.getColumnName().toUpperCase().endsWith("_ID"))
-					{
-						tableName = aColumn.getColumnName().substring(0, aColumn.getColumnName().lastIndexOf("_"));
-						columnName = aColumn.getColumnName();
-					}
-					// Si la columna tiene tiene una referencia seteada, entonces buscar la definición allí
-					if(aColumn.getAD_Reference_Value_ID() != 0)
-					{
-						// Recuperar nombre de tabla y columna que está referenciando la columna actual  
-						int tableID = 0, key = 0;
-						tableID = getTableIDFromReferenceID(aColumn.getAD_Reference_Value_ID(), getTrxName());
-						key = getKeyFromReferenceID(aColumn.getAD_Reference_Value_ID(), getTrxName());
-						tableName = getTableNameFromTableID(tableID, getTrxName());
-						columnName = M_Column.getColumnName(Env.getCtx(), key);
-					}
+					// Recuperar nombre de tabla y columna referenciada
+					ArrayList<String> reference = getReferencedColumnAndTableName(aColumn);
+					String tableName = reference.get(0);
+					String columnName = reference.get(1);					
 					// si se obtuvo una referencia válida, recuperar el dato
 					if (columnName!=null && tableName!=null && columnName.length()>0 && tableName.length() > 0)
 					{
@@ -574,6 +628,38 @@ public abstract class GeneralHandler {
 		}
 		
 		return map;
+	}
+	
+	/**
+	 * Dada una M_Columnm, retorna el nombre de la tabla y columna de tipo ID referenciada en dicha M_Column
+	 * @param aColumn columna que contiene la referencia
+	 * @return un ArrayList conteniendo:
+	 * 		1. Nombre de la tabla referenciada
+	 * 		2. Nombre de la columna de tipo ID referenciada
+	 */
+	protected ArrayList<String> getReferencedColumnAndTableName(M_Column aColumn) throws Exception {
+		String tableName = null;
+		String columnName = null;
+		// Si la columna termina en _ID la tabla referenciada se determina de manera directa
+		if(aColumn.getColumnName().toUpperCase().endsWith("_ID"))
+		{
+			tableName = aColumn.getColumnName().substring(0, aColumn.getColumnName().lastIndexOf("_"));
+			columnName = aColumn.getColumnName();
+		}
+		// Si la columna tiene tiene una referencia seteada, entonces buscar la definición allí
+		if(aColumn.getAD_Reference_Value_ID() != 0)
+		{
+			// Recuperar nombre de tabla y columna que está referenciando la columna actual  
+			int tableID = 0, key = 0;
+			tableID = getTableIDFromReferenceID(aColumn.getAD_Reference_Value_ID(), getTrxName());
+			key = getKeyFromReferenceID(aColumn.getAD_Reference_Value_ID(), getTrxName());
+			tableName = getTableNameFromTableID(tableID, getTrxName());
+			columnName = M_Column.getColumnName(Env.getCtx(), key);
+		}
+		ArrayList<String> retValue = new ArrayList<String>();
+		retValue.add(tableName);
+		retValue.add(columnName);
+		return retValue;
 	}
 	
 	/**

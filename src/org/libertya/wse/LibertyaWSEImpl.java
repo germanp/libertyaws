@@ -52,7 +52,7 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 	
 	public SimpleResult bPartnerCreate(Login login, SimpleMap[] data, SimpleMap[] location) {
 		BPartnerParameterBean bean = new BPartnerParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), data, location);
-		ResultBean resultBean = new BPartnerLocationCRUDHandler().bPartnerLocationCreate(bean);
+		ResultBean resultBean = new BPartnerCRUDHandler().bPartnerCreate(bean);
 		return new SimpleResult(resultBean);
 	}
 
@@ -76,13 +76,13 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 
 	public SimpleResult bPartnerUpdate(Login login, SimpleMap[] data, SimpleMap[] location, int bPartnerID, int bPartnerLocationID) {
 		BPartnerParameterBean bean = new BPartnerParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), data, location);
-		ResultBean resultBean = new BPartnerLocationCRUDHandler().bPartnerLocationUpdate(bean, bPartnerLocationID);
+		ResultBean resultBean = new BPartnerCRUDHandler().bPartnerUpdate(bean, bPartnerID, bPartnerLocationID);
 		return new SimpleResult(resultBean);
 	}
 
 	public SimpleResult bPartnerDelete(Login login, int bPartnerID) {
 		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
-		ResultBean resultBean = new BPartnerLocationCRUDHandler().bPartnerLocationUpdate(bean, bPartnerID);
+		ResultBean resultBean = new BPartnerCRUDHandler().bPartnerDelete(bean, bPartnerID);
 		return new SimpleResult(resultBean);
 	}
 	

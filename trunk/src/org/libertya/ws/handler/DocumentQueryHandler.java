@@ -162,30 +162,58 @@ public class DocumentQueryHandler extends GeneralHandler {
 	 * @return retorna una serie de cabeceras de pedidos a partir de los parametros de entrada 
 	 */
 	public MultipleDocumentsResultBean documentQueryOrders(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate) {
-		return documentQuery(MOrder.Table_Name, data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, null);
+		return documentQuery(MOrder.Table_Name, data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, null, null);
+	}
+
+	/**
+	 * @return retorna una serie de cabeceras de pedidos a partir de los parametros de entrada 
+	 */
+	public MultipleDocumentsResultBean documentQueryOrders(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String [] referencedTablesColumns) {
+		return documentQuery(MOrder.Table_Name, data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause, referencedTablesColumns);
 	}
 
 	/**
 	 * @return retorna una serie de cabeceras de facturas a partir de los parametros de entrada 
 	 */
 	public MultipleDocumentsResultBean documentQueryInvoices(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause) {
-		return documentQuery(MInvoice.Table_Name, data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause);
+		return documentQuery(MInvoice.Table_Name, data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause, null);
 	}
 
+	
+	/**
+	 * @return retorna una serie de cabeceras de facturas a partir de los parametros de entrada 
+	 */
+	public MultipleDocumentsResultBean documentQueryInvoices(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns) {
+		return documentQuery(MInvoice.Table_Name, data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause, referencedTablesColumns);
+	}
+	
 	/**
 	 * @return retorna una serie de cabeceras de remitos a partir de los parametros de entrada 
 	 */
 	public MultipleDocumentsResultBean documentQueryInOuts(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate) {
-		return documentQuery(MInOut.Table_Name, data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, null);
+		return documentQuery(MInOut.Table_Name, data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, null, null);
+	}
+	
+	/**
+	 * @return retorna una serie de cabeceras de remitos a partir de los parametros de entrada 
+	 */
+	public MultipleDocumentsResultBean documentQueryInOuts(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns) {
+		return documentQuery(MInOut.Table_Name, data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause, referencedTablesColumns);
 	}
 
 	/**
 	 * @return retorna una serie de cabeceras de OP/RC a partir de los parametros de entrada 
 	 */
 	public MultipleDocumentsResultBean documentQueryAllocations(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate) {
-		return documentQuery(MAllocationHdr.Table_Name, data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, null);
+		return documentQuery(MAllocationHdr.Table_Name, data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, null, null);
 	}
 
+	/**
+	 * @return retorna una serie de cabeceras de OP/RC a partir de los parametros de entrada 
+	 */
+	public MultipleDocumentsResultBean documentQueryAllocations(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns) {
+		return documentQuery(MAllocationHdr.Table_Name, data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause, referencedTablesColumns);
+	}
 	
 	/**
 	 * Devuelve una serie de Documentos que coincida con el criterio de busqueda indicado
@@ -200,9 +228,11 @@ public class DocumentQueryHandler extends GeneralHandler {
 	 * @param salesTrxOnly  si se recibe como true, filtra por IsSoTrx = 'Y' (o sea solo transacciones de venta)
 	 * @param fromDate  optativo. filtrar por fecha de inicio a los resultados
 	 * @param toDate  optativo. filtrar por fecha de fin a los resultados
+	 * @param additionalWhereClause filtros custom adicionales
+	 * @param referencedTablesColumns mostrar columnas especificas de los registros referenciados.  Ejemplo: CreatedBy.Name, C_BPartner_ID.Description, C_DocType_ID.DocTypeKey, etc.
 	 * @return MultipleDocumentsResultBean con OK, ERROR, los encabezados.
 	 */
-	protected MultipleDocumentsResultBean documentQuery(String tableName, ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause) 
+	protected MultipleDocumentsResultBean documentQuery(String tableName, ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns) 
 	{
 		try
 		{	
@@ -259,7 +289,7 @@ public class DocumentQueryHandler extends GeneralHandler {
 			MultipleDocumentsResultBean result = new MultipleDocumentsResultBean(false, null, new HashMap<String, String>());
 			for (int documentID : documentIDs) {
 				PO aDocument = getPO(tableName, documentID, null, null, false, false, false, false);
-				HashMap<String, String> map = poToMap(aDocument, true);
+				HashMap<String, String> map = poToMap(aDocument, true, referencedTablesColumns);
 				// Para la tabla de facturas, incorporar informacion adicional
 				if (MInvoice.Table_Name.equals(tableName))
 					appendAditionalInvoiceInfoToMap(aDocument, map);

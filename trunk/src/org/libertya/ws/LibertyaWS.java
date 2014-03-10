@@ -315,6 +315,24 @@ public interface LibertyaWS {
 	 * @return MultipleDocumentsResultBean con OK y la nomina de encabezados, o error en caso contrario.
 	 */
 	public MultipleDocumentsResultBean documentQueryOrders(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate);
+	
+	/**
+	 * Devuelve una serie de encabezados de pedido que coincida con el criterio de busqueda indicado
+	 * @param data parametros generales de acceso
+	 * @param bPartnerID primer criterio de búsqueda.  Todos los documentos de la E.C. indicada por su ID 
+	 * @param value segundo criterio de búsqueda.  Todos los documentos de la E.C. indicada por su Value
+	 * @param taxID tercer criterio de búsquedda.  Todos los documentos de la E.C. indicada por su CUIT
+	 * @param filterByClient optativo. filtrar los resultados por la compañía a la cual estamos logueados
+	 * @param filterByOrg  optativo. filtrar los resultados por la organización a la cual estamos logueados
+	 * @param purchaseTrxOnly  si se recibe como true, filtra por IsSoTrx = 'N' (o sea solo transacciones de compra)
+	 * @param salesTrxOnly  si se recibe como true, filtra por IsSoTrx = 'Y' (o sea solo transacciones de venta)
+	 * @param fromDate  optativo. filtrar por fecha de inicio a los resultados, con formato YYYY-MM-DD
+	 * @param toDate  optativo. filtrar por fecha de fin a los resultados, con formato YYYY-MM-DD
+	 * @param additionalWhereClause criterios de filtrado adicionales
+	 * @param referencedTablesColumns mostrar columnas especificas de los registros referenciados.  Ejemplo: CreatedBy.Name (nombre del que creo el registro), C_BPartner_ID.Description (descripcion de la EC), C_DocType_ID.DocTypeKey (doctypekey del tipo de documento), etc.
+	 * @return MultipleDocumentsResultBean con OK y la nomina de encabezados, o error en caso contrario.
+	 */
+	public MultipleDocumentsResultBean documentQueryOrders(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns);
 
 	/**
 	 * Devuelve una serie de encabezados de factura que coincida con el criterio de busqueda indicado
@@ -328,9 +346,29 @@ public interface LibertyaWS {
 	 * @param salesTrxOnly  si se recibe como true, filtra por IsSoTrx = 'Y' (o sea solo transacciones de venta)
 	 * @param fromDate  optativo. filtrar por fecha de inicio a los resultados, con formato YYYY-MM-DD
 	 * @param toDate  optativo. filtrar por fecha de fin a los resultados, con formato YYYY-MM-DD
+	 * @param additionalWhereClause criterios de filtrado adicionales
 	 * @return MultipleDocumentsResultBean con OK y la nomina de encabezados, o error en caso contrario.
 	 */
 	public MultipleDocumentsResultBean documentQueryInvoices(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause);
+	
+	
+	/**
+	 * Devuelve una serie de encabezados de factura que coincida con el criterio de busqueda indicado
+	 * @param data parametros generales de acceso
+	 * @param bPartnerID primer criterio de búsqueda.  Todos los documentos de la E.C. indicada por su ID 
+	 * @param value segundo criterio de búsqueda.  Todos los documentos de la E.C. indicada por su Value
+	 * @param taxID tercer criterio de búsquedda.  Todos los documentos de la E.C. indicada por su CUIT
+	 * @param filterByClient optativo. filtrar los resultados por la compañía a la cual estamos logueados
+	 * @param filterByOrg  optativo. filtrar los resultados por la organización a la cual estamos logueados
+	 * @param purchaseTrxOnly  si se recibe como true, filtra por IsSoTrx = 'N' (o sea solo transacciones de compra)
+	 * @param salesTrxOnly  si se recibe como true, filtra por IsSoTrx = 'Y' (o sea solo transacciones de venta)
+	 * @param fromDate  optativo. filtrar por fecha de inicio a los resultados, con formato YYYY-MM-DD
+	 * @param toDate  optativo. filtrar por fecha de fin a los resultados, con formato YYYY-MM-DD
+	 * @param additionalWhereClause criterios de filtrado adicionales
+	 * @param referencedTablesColumns mostrar columnas especificas de los registros referenciados.  Ejemplo: CreatedBy.Name (nombre del que creo el registro), C_BPartner_ID.Description (descripcion de la EC), C_DocType_ID.DocTypeKey (doctypekey del tipo de documento), etc.
+	 * @return MultipleDocumentsResultBean con OK y la nomina de encabezados, o error en caso contrario.
+	 */
+	public MultipleDocumentsResultBean documentQueryInvoices(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns);
 	
 	/**
 	 * Devuelve una serie de encabezados de remitos que coincida con el criterio de busqueda indicado
@@ -349,6 +387,24 @@ public interface LibertyaWS {
 	public MultipleDocumentsResultBean documentQueryInOuts(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate);
 	
 	/**
+	 * Devuelve una serie de encabezados de remitos que coincida con el criterio de busqueda indicado
+	 * @param data parametros generales de acceso
+	 * @param bPartnerID primer criterio de búsqueda.  Todos los documentos de la E.C. indicada por su ID 
+	 * @param value segundo criterio de búsqueda.  Todos los documentos de la E.C. indicada por su Value
+	 * @param taxID tercer criterio de búsquedda.  Todos los documentos de la E.C. indicada por su CUIT
+	 * @param filterByClient optativo. filtrar los resultados por la compañía a la cual estamos logueados
+	 * @param filterByOrg  optativo. filtrar los resultados por la organización a la cual estamos logueados
+	 * @param purchaseTrxOnly  si se recibe como true, filtra por IsSoTrx = 'N' (o sea solo transacciones de compra)
+	 * @param salesTrxOnly  si se recibe como true, filtra por IsSoTrx = 'Y' (o sea solo transacciones de venta)
+	 * @param fromDate  optativo. filtrar por fecha de inicio a los resultados, con formato YYYY-MM-DD
+	 * @param toDate  optativo. filtrar por fecha de fin a los resultados, con formato YYYY-MM-DD
+	 * @param additionalWhereClause criterios de filtrado adicionales
+	 * @param referencedTablesColumns mostrar columnas especificas de los registros referenciados.  Ejemplo: CreatedBy.Name (nombre del que creo el registro), C_BPartner_ID.Description (descripcion de la EC), C_DocType_ID.DocTypeKey (doctypekey del tipo de documento), etc.
+	 * @return MultipleDocumentsResultBean con OK y la nomina de encabezados, o error en caso contrario.
+	 */
+	public MultipleDocumentsResultBean documentQueryInOuts(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns);
+	
+	/**
 	 * Devuelve una serie de encabezados de OP/RC que coincida con el criterio de busqueda indicado
 	 * @param data parametros generales de acceso
 	 * @param bPartnerID primer criterio de búsqueda.  Todos los documentos de la E.C. indicada por su ID 
@@ -364,6 +420,23 @@ public interface LibertyaWS {
 	 */
 	public MultipleDocumentsResultBean documentQueryAllocations(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate);
 	
+	/**
+	 * Devuelve una serie de encabezados de OP/RC que coincida con el criterio de busqueda indicado
+	 * @param data parametros generales de acceso
+	 * @param bPartnerID primer criterio de búsqueda.  Todos los documentos de la E.C. indicada por su ID 
+	 * @param value segundo criterio de búsqueda.  Todos los documentos de la E.C. indicada por su Value
+	 * @param taxID tercer criterio de búsquedda.  Todos los documentos de la E.C. indicada por su CUIT
+	 * @param filterByClient optativo. filtrar los resultados por la compañía a la cual estamos logueados
+	 * @param filterByOrg  optativo. filtrar los resultados por la organización a la cual estamos logueados
+	 * @param purchaseTrxOnly  si se recibe como true, filtra por IsSoTrx = 'N' (o sea solo transacciones de compra)
+	 * @param salesTrxOnly  si se recibe como true, filtra por IsSoTrx = 'Y' (o sea solo transacciones de venta)
+	 * @param fromDate  optativo. filtrar por fecha de inicio a los resultados, con formato YYYY-MM-DD
+	 * @param toDate  optativo. filtrar por fecha de fin a los resultados, con formato YYYY-MM-DD
+	 * @param additionalWhereClause criterios de filtrado adicionales
+	 * @param referencedTablesColumns mostrar columnas especificas de los registros referenciados.  Ejemplo: CreatedBy.Name (nombre del que creo el registro), C_BPartner_ID.Description (descripcion de la EC), C_DocType_ID.DocTypeKey (doctypekey del tipo de documento), etc.
+	 * @return MultipleDocumentsResultBean con OK y la nomina de encabezados, o error en caso contrario.
+	 */
+	public MultipleDocumentsResultBean documentQueryAllocations(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns);
 
 	/* ===================================================== */
 	/* ===================== Pedidos ======================= */

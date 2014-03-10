@@ -56,6 +56,9 @@ public abstract class GeneralHandler {
 	public static final String ENV_OXP_HOME 			= "OXP_HOME";
 	public static final String ENV_OXP_WS_LOG 			= "OXP_WS_LOG";
 	
+	/** Separador entre nombre de tabla y nombre de columna para columnas referenciadas */
+	public static final String REF_TABLE_COL_SEP		= ".";
+	
 	/** Cantidad de decimales a utilizar y metodo de redondeo */
 	protected static final int BD_SCALE 				= 2;
 	protected static final RoundingMode BD_ROUND_MODE 	= RoundingMode.HALF_EVEN;
@@ -530,8 +533,22 @@ public abstract class GeneralHandler {
 	 * 		Sobrecarga de método poToMap(po, includeNamedReferences, baseMap, additionalPrefix) por compatibilidad
 	 * @return la coleccion resultante.
 	 */
+	protected HashMap<String, String> poToMap(PO po, boolean includeNamedReferences, String[] referencedTablesColumns) {
+		return poToMap(po, includeNamedReferences, null, "", null, referencedTablesColumns);
+	}
+
+	/**
+	 * Sobrecarga por compatibilidad
+	 */
 	protected HashMap<String, String> poToMap(PO po, boolean includeNamedReferences) {
-		return poToMap(po, includeNamedReferences, null, "", null);
+		return poToMap(po, includeNamedReferences, null, "", null, null);
+	}
+	
+	/**
+	 * Sobrecarga por compatibilidad
+	 */
+	protected HashMap<String, String> poToMap(PO po, boolean includeNamedReferences, HashMap<String, String> baseMap, String additionalPrefix, ArrayList<String> filterColumns) {
+		return poToMap(po, includeNamedReferences, null, "", null, null);
 	}
 	
 	/**
@@ -544,9 +561,14 @@ public abstract class GeneralHandler {
 	 *				  Si se recibe null, se crea una nueva map en donde cargar los datos a devolver.   
 	 * @param additionalPrefix prefijo adicional que se incorpora inmediatamente antes del nombre de la columna (ej: prefijoNombreDeColumna)
 	 * @param filterColumns solo incluye las columnas indicadas en este parametro como resultado.  Si se recibe null o sin entradas, entonces devolver todas
+	 * @param referencedTablesColumns mostrar columnas especificas de los registros referenciados.  Ejemplo: CreatedBy.Name, C_BPartner_ID.Description, etc. <br>
+	 * 			Se debe especificar de la siguiente manera: ColumnaDeReferenciaEnTablaOrigen.ColumnaARecuperarEnTablaDestino <br>
+	 * 			Ejemplo con documentQueryInvoices: <br>
+	 * 				Obtener el nombre del usuario que generó la factura (C_Invoice.CreatedBy -> AD_User.Name), indicar "CreatedBy.Name" <br>
+	 * 				Obtener la descripción de la EC de la factura (C_Invoice.C_BPartner_ID -> C_BPartner.Description), indicar "C_BPartner_ID.Description" <br>
 	 * @return la colección resultante
 	 */
-	protected HashMap<String, String> poToMap(PO po, boolean includeNamedReferences, HashMap<String, String> baseMap, String additionalPrefix, ArrayList<String> filterColumns)
+	protected HashMap<String, String> poToMap(PO po, boolean includeNamedReferences, HashMap<String, String> baseMap, String additionalPrefix, ArrayList<String> filterColumns, String[] referencedTablesColumns)
 	{
 		HashMap<String, String> map = (baseMap == null ? new HashMap<String, String>() : baseMap);
 		if (additionalPrefix==null)
@@ -566,8 +588,8 @@ public abstract class GeneralHandler {
 			// Cargar dato a la map
 			map.put(additionalPrefix + aColumn.getColumnName(), po.get_ValueAsString(aColumn.getColumnName()));
 			
-			// Referencia de name/value en tablas referenciadas
-			if (includeNamedReferences && po.get_Value(aColumn.getColumnName())!=null && isTableReference(aColumn))
+			// Referencia de name/value en tablas referenciadas.  Recuperación de columnas referenciadas segun referencedTablesColumns
+			if ((includeNamedReferences || (referencedTablesColumns!=null && referencedTablesColumns.length>0)) && po.get_Value(aColumn.getColumnName())!=null && isTableReference(aColumn))
 			{
 				try
 				{
@@ -587,16 +609,21 @@ public abstract class GeneralHandler {
 																	" FROM information_schema.columns " +
 																	" WHERE table_name = '"+tableName.toLowerCase()+"'" +
 																	" AND column_name = 'value'");
-						// Si no hay identificadores y no hay columna Value, no hay nada mas que hacer
-						if (identifierColumns.length()==0 && valueCol==0)
+						// Si no hay identificadores, no hay columna Value, y no hay columnas adicionales a recuperar... entonces no hay nada mas que hacer
+						if (identifierColumns.length()==0 && valueCol==0 && (referencedTablesColumns==null || referencedTablesColumns.length==0))
 							continue;
 						// Si hay identificadores, borrar ultimo concatenador
 						if (identifierColumns.length()>0)
 							identifierColumns.delete(identifierColumns.length()-11, identifierColumns.length()-1);
 						
 						// Obtener el dato referenciado y cargar los identificadoes en la map de detalles (y el value también si es que este existe)
-						String sql = " SELECT COALESCE(" + identifierColumns.toString() + ") as detail " + (valueCol>0?", value ":"") +
-										" FROM " + tableName + " WHERE " + columnName + " = ? ";
+						// Incorporar también las columnas que se requieran segun especificacion en referencedTablesColumns
+						String sql = " SELECT null as dummyColumnForResultSet " +
+										(identifierColumns.length() > 0 ? ", COALESCE(" + identifierColumns.toString() + ") as detail " : "") + 
+										(valueCol>0?", value ":"") +
+										addReferencedTablesColumnsToQuery(referencedTablesColumns, aColumn) +
+										" FROM " + tableName + 
+										" WHERE " + columnName + " = ? ";
 						PreparedStatement ps = DB.prepareStatement(sql, getTrxName());
 						Object value;
 						Integer intValue;
@@ -616,6 +643,8 @@ public abstract class GeneralHandler {
 							// Cargar el value del registro referenciado
 							if (valueCol > 0 && rs.getString("value") != null)
 								map.put(additionalPrefix + aColumn.getColumnName() + REFERENCE_DETAIL_VALUE, rs.getString("value"));
+							// Cargar las columnas adicionales requeridas segun referencedTablesColumns
+							addReferencedTablesColumnsToMap(referencedTablesColumns, aColumn, map, rs, additionalPrefix);
 						}
 								
 					}
@@ -629,6 +658,52 @@ public abstract class GeneralHandler {
 		
 		return map;
 	}
+	
+	/**
+	 * Amplia el query de recuperación de columnas referenciadas segun lo recibido en referencedTablesColumns
+	 * @param referencedTablesColumns nomina de columnas referenciadas, por ejemplo CreatedBy.Name
+	 * @param aColumn columna que se está evaluando en este momento
+	 * @return la ampliacion de la query con el conjunto de datos a recuperar 
+	 */
+	protected String addReferencedTablesColumnsToQuery(String[] referencedTablesColumns, M_Column aColumn) {
+		StringBuffer retValue = new StringBuffer();
+		if (referencedTablesColumns==null || referencedTablesColumns.length==0)
+			return retValue.toString();
+		// Iterar por las referencias, considerando unicamente las de la tabla 
+		for (String aReferencedColumn : referencedTablesColumns) {
+			// Tiene aColumn (por ejemplo CreatedBy) coincidencia con aReferencedColumn (por ejemplo CreatedBy.Description)?
+			// De ser asi, indicar que se quiere recuperar la información correspondiente (en el ejemplo columna Description)
+			String refColSource = aReferencedColumn.substring(0, aReferencedColumn.indexOf(REF_TABLE_COL_SEP));
+			String refColTarget = aReferencedColumn.substring(aReferencedColumn.indexOf(REF_TABLE_COL_SEP)+1);
+			if (aColumn.getColumnName().equalsIgnoreCase(refColSource))
+				retValue.append(", ").append(refColTarget);
+		}
+		return retValue.toString();
+	}
+	
+	/**
+	 * Incopora a la map un dato recuperado a partir del pedido de obtencion de columnas en referencedTablesColumns 
+	 * @param referencedTablesColumns nomina total de columnas a recuperar
+	 * @param aColumn columna que se está procesando en este momento
+	 * @param map valores a retornar
+	 * @param rs informacion recuperada
+	 * @param additionalPrefix prefijo adicional
+	 * @throws Exception
+	 */
+	protected void addReferencedTablesColumnsToMap(String[] referencedTablesColumns, M_Column aColumn, HashMap<String, String> map, ResultSet rs, String additionalPrefix) throws Exception {
+		if (referencedTablesColumns==null || referencedTablesColumns.length==0)
+			return;
+		for (String aReferencedColumn : referencedTablesColumns) {
+			// Tiene aColumn (por ejemplo CreatedBy) coincidencia con aReferencedColumn (por ejemplo CreatedBy.Description)?
+			// De ser asi, recuperar el dato desde el resultSet (en el ejemplo columna Description) y volcarlo en la map
+			String refColSource = aReferencedColumn.substring(0, aReferencedColumn.indexOf(REF_TABLE_COL_SEP));
+			String refColTarget = aReferencedColumn.substring(aReferencedColumn.indexOf(REF_TABLE_COL_SEP)+1);
+			if (aColumn.getColumnName().equalsIgnoreCase(refColSource) && rs.getString(refColTarget) != null)
+				map.put(additionalPrefix + aReferencedColumn, rs.getString(refColTarget));
+		}
+		
+	}
+	
 	
 	/**
 	 * Dada una M_Columnm, retorna el nombre de la tabla y columna de tipo ID referenciada en dicha M_Column

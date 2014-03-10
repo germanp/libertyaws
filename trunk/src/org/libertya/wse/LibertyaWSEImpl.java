@@ -256,9 +256,21 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		return new MultipleRecordsResult(resultBean);		
 	}
 
+	public MultipleRecordsResult documentQueryOrders(Login login, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns) {
+		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
+		MultipleDocumentsResultBean resultBean = new DocumentQueryHandler().documentQueryOrders(bean, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause, referencedTablesColumns);
+		return new MultipleRecordsResult(resultBean);		
+	}
+	
 	public MultipleRecordsResult documentQueryInvoices(Login login, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly,	String fromDate, String toDate, String additionalWhereClause) {
 		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
 		MultipleDocumentsResultBean resultBean = new DocumentQueryHandler().documentQueryInvoices(bean, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause);
+		return new MultipleRecordsResult(resultBean);	
+	}
+	
+	public MultipleRecordsResult documentQueryInvoices(Login login, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly,	String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns) {
+		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
+		MultipleDocumentsResultBean resultBean = new DocumentQueryHandler().documentQueryInvoices(bean, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause, referencedTablesColumns);
 		return new MultipleRecordsResult(resultBean);	
 	}
 
@@ -268,9 +280,21 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		return new MultipleRecordsResult(resultBean);	
 	}
 
+	public MultipleRecordsResult documentQueryInOuts(Login login, int bPartnerID, String value, String taxID, boolean filterByClient,	boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly,	String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns) {
+		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
+		MultipleDocumentsResultBean resultBean = new DocumentQueryHandler().documentQueryInOuts(bean, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause, referencedTablesColumns);
+		return new MultipleRecordsResult(resultBean);	
+	}
+	
 	public MultipleRecordsResult documentQueryAllocations(Login login, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate) {
 		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
 		MultipleDocumentsResultBean resultBean = new DocumentQueryHandler().documentQueryAllocations(bean, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate);
+		return new MultipleRecordsResult(resultBean);
+	}
+	
+	public MultipleRecordsResult documentQueryAllocations(Login login, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns) {
+		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
+		MultipleDocumentsResultBean resultBean = new DocumentQueryHandler().documentQueryAllocations(bean, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause, referencedTablesColumns);
 		return new MultipleRecordsResult(resultBean);
 	}
 	

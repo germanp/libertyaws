@@ -186,18 +186,34 @@ public class LibertyaWSImpl implements LibertyaWS {
 		return new DocumentQueryHandler().documentQueryOrders(data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate);
 	}
 	
+	public synchronized MultipleDocumentsResultBean documentQueryOrders(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns) {
+		return new DocumentQueryHandler().documentQueryOrders(data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause, referencedTablesColumns);
+	}
+
 	public synchronized MultipleDocumentsResultBean documentQueryInvoices(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause) {
 		return new DocumentQueryHandler().documentQueryInvoices(data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause);
+	}
+	
+	public MultipleDocumentsResultBean documentQueryInvoices(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns) {
+		return new DocumentQueryHandler().documentQueryInvoices(data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause, referencedTablesColumns);
 	}
 	
 	public synchronized MultipleDocumentsResultBean documentQueryInOuts(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate) {
 		return new DocumentQueryHandler().documentQueryInOuts(data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate);
 	}
 	
+	public synchronized MultipleDocumentsResultBean documentQueryInOuts(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns) {
+		return new DocumentQueryHandler().documentQueryInOuts(data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause, referencedTablesColumns);
+	}
+	
 	public synchronized MultipleDocumentsResultBean documentQueryAllocations(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate) {
 		return new DocumentQueryHandler().documentQueryAllocations(data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate);
 	}
 
+	public synchronized MultipleDocumentsResultBean documentQueryAllocations(ParameterBean data, int bPartnerID, String value, String taxID, boolean filterByClient, boolean filterByOrg, boolean purchaseTrxOnly, boolean salesTrxOnly, String fromDate, String toDate, String additionalWhereClause, String[] referencedTablesColumns) {
+		return new DocumentQueryHandler().documentQueryAllocations(data, bPartnerID, value, taxID, filterByClient, filterByOrg, purchaseTrxOnly, salesTrxOnly, fromDate, toDate, additionalWhereClause, referencedTablesColumns);
+	}
+	
 	/* ===================================================== */
 	/* ===================== Pedidos ======================= */
 	/* ===================================================== */

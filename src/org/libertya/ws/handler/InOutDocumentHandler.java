@@ -9,6 +9,7 @@ import org.libertya.ws.exception.ModelException;
 import org.openXpertya.model.MBPartner;
 import org.openXpertya.model.MInOut;
 import org.openXpertya.model.MInOutLine;
+import org.openXpertya.model.MOrder;
 import org.openXpertya.model.X_C_Order;
 import org.openXpertya.process.DocAction;
 import org.openXpertya.process.DocumentEngine;
@@ -117,6 +118,46 @@ public class InOutDocumentHandler extends DocumentHandler {
 			if (completeInOut && !DocumentEngine.processAndSave(anInOut, DocAction.ACTION_Complete, false))
 				throw new ModelException("Error al completar el remito:" + Msg.parseTranslation(getCtx(), anInOut.getProcessMsg()));
 									
+			/* === Commitear transaccion === */
+			Trx.getTrx(getTrxName()).commit();
+			
+			/* === Retornar valor === */
+			HashMap<String, String> result = new HashMap<String, String>();
+			result.put("M_InOut_ID", Integer.toString(anInOut.getM_InOut_ID()));
+			result.put("InOut_DocumentNo", anInOut.getDocumentNo());
+			return new ResultBean(false, null, result);
+		}
+		catch (ModelException me) {
+			return processException(me, wsInvocationArguments(data));
+		}
+		catch (Exception e) {
+			return processException(e, wsInvocationArguments(data));
+		}
+		finally	{
+			closeTransaction();
+		}
+	}
+	
+	/**
+	 * Creación de un remito a partir de un pedido
+	 * @param data información de acceso y de las líneas a remitir (para remisiones parciales).   
+	 * 			Si no es indican líneas, se considera remisión completa
+	 * @param orderID pedido a tomar como base para la creación del remito
+	 * @return ResultBean con OK y datos: M_InOut_ID, InOut_DocumentNo creado, etc. o ERROR en caso contrario.
+	 */
+	public ResultBean inOutCreateFromOrder(DocumentParameterBean data, int orderID, boolean completeInOut) {
+		
+		try
+		{
+			/* === Configuracion inicial === */
+			init(data, new String[]{"orderID", "completeInOut"}, new Object[]{orderID, completeInOut});
+			
+			/* === Procesar (logica especifica) === */
+			// Recuperar el pedido
+			MOrder anOrder = new MOrder(getCtx(), orderID, getTrxName());
+			// Crear el remito a partir del pedido
+			MInOut anInOut = new OrderDocumentHandler().createInOutFromOrder(anOrder, completeInOut, data.getDocumentLines());
+			
 			/* === Commitear transaccion === */
 			Trx.getTrx(getTrxName()).commit();
 			

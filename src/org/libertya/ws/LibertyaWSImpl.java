@@ -282,6 +282,10 @@ public class LibertyaWSImpl implements LibertyaWS {
 	public synchronized ResultBean inOutCreateVendor(DocumentParameterBean data, int bPartnerID, String bPartnerValue, String taxID, boolean completeInOut) {
 		return new InOutDocumentHandler().inOutCreateVendor(data, bPartnerID, bPartnerValue, taxID, completeInOut);
 	}
+	
+	public synchronized ResultBean inOutCreateFromOrder(DocumentParameterBean data, int orderID, boolean completeInOut) {
+		return new InOutDocumentHandler().inOutCreateFromOrder(data, orderID, completeInOut);
+	}
 
 	public synchronized ResultBean inOutDeleteByID(ParameterBean data, int inOutID) {
 		return new InOutDocumentHandler().inOutDeleteByID(data, inOutID);

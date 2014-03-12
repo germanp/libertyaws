@@ -609,6 +609,16 @@ public interface LibertyaWS {
 	public ResultBean inOutCreateVendor(DocumentParameterBean data, int bPartnerID, String bPartnerValue, String taxID, boolean completeInOut);
 
 	/**
+	 * Creación de un remito a partir de un pedido
+	 * @param data información de acceso y de las líneas a remitir (para remisiones parciales, indicando para cada línea el C_OrderLine_ID y QtyEntered).   
+	 * 			Si no se indican líneas, se considera remisión completa.
+	 * @param orderID pedido a tomar como base para la creación del remito
+	 * @param completeInOut si debe completar el remito creado
+	 * @return ResultBean con OK y datos: M_InOut_ID, InOut_DocumentNo creado, etc. o ERROR en caso contrario.
+	 */
+	public ResultBean inOutCreateFromOrder(DocumentParameterBean data, int orderID, boolean completeInOut);
+	
+	/**
 	 * Elimina un remito en borrador.  El mismo debe ser indicado por su ID
 	 * @param data parametros correspondientes
 	 * @param inOutID identificador del remito (M_InOut_ID)

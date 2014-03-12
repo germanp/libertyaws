@@ -1,5 +1,7 @@
 package org.libertya.wse;
 
+import org.libertya.ws.bean.parameter.DocumentParameterBean;
+import org.libertya.ws.bean.result.ResultBean;
 import org.libertya.wse.common.ListedMap;
 import org.libertya.wse.common.RecordContent;
 import org.libertya.wse.common.SimpleMap;
@@ -311,6 +313,11 @@ public interface LibertyaWSE {
 	 */
 	public SimpleResult inOutCreateVendor(Login login, SimpleMap[] header, DocumentLine[] lines, int bPartnerID, String bPartnerValue, String taxID, boolean completeInOut);
 
+	/**
+	 * Wrapper para <code>inOutCreateFromOrder(DocumentParameterBean data, int orderID, boolean completeInOut)</code> 
+	 */
+	public SimpleResult inOutCreateFromOrder(Login login, SimpleMap[] header, DocumentLine[] lines, int orderID, boolean completeInOut);
+	
 	/**
 	 * Wrapper para <code>inOutDeleteByID(ParameterBean data, int inOutID)</code>
 	 */

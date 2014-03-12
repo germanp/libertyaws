@@ -1,5 +1,7 @@
 package org.libertya.ws.handler;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.libertya.ws.bean.parameter.OrderParameterBean;
@@ -367,9 +369,19 @@ public class OrderDocumentHandler extends DocumentHandler {
 	}
 	
 	/**
-	 * Gestiona la creación de un remito a partir del pedido, apoyandose en la clase CreateFromShipment.
+	 * Sobrecarga por compatibilidad
 	 */
-	protected MInOut createInOutFromOrder(MOrder anOrder, boolean completeInOut) throws ModelException, Exception 
+	protected MInOut createInOutFromOrder(MOrder anOrder, boolean completeInOut) throws ModelException, Exception {
+		return createInOutFromOrder(anOrder, completeInOut, null);
+	}
+	
+	/**
+	 * Gestiona la creación de un remito a partir del pedido, apoyandose en la clase CreateFromShipment.
+	 * @param anOrder pedido sobre el cual tomar la informacion
+	 * @param completeInOut si se desea completar el pedido
+	 * @param inOutLines para remisiones parciales (se debe indicar para cada línea el C_OrderLine_ID y QtyEntered), si no se especifica se supone que el pedido se remite completamente
+	 */
+	protected MInOut createInOutFromOrder(MOrder anOrder, boolean completeInOut, ArrayList<HashMap<String, String>> inOutLines) throws ModelException, Exception 
 	{
 		// Instanciar el nuevo remito
 		MInOut anInOut = new MInOut(anOrder, 0, Env.getDate());
@@ -377,25 +389,63 @@ public class OrderDocumentHandler extends DocumentHandler {
 		CreateFromShipment.copyHeaderValuesFromOrder(anInOut, anOrder, getCtx(), getTrxName());
 		// Copiar los datos del pedido en el remito
 		copyPOValues(anOrder, anInOut);
+		// Setear el tipo de documento
+		anInOut.setC_DocType_ID();
+
 		if (!anInOut.save())
 			throw new ModelException("Error al persistir Remito:" + CLogger.retrieveErrorAsString());
-
-		// Instanciar y persistir las Lineas de remito a partir de las lineas de pedido
-		MOrderLine[] orderLines = anOrder.getLines();
-		for (int i=0; i<orderLines.length; i++)
-		{
-			// Crear nueva linea y setearle los datos originales de la linea de pedido
-			MInOutLine anInOutLine = new MInOutLine(anInOut);
-			anInOutLine.setOrderLine(orderLines[i], 0, orderLines[i].getQtyOrdered());
-			// Copia general de campos de cabecera
-			CreateFromShipment.copyLineValuesFromOrderLine(anInOut, anOrder, anInOutLine, orderLines[i], getCtx(), getTrxName());
-			// Copiar los datos de la linea de pedido en la linea del remito
-			copyPOValues(orderLines[i], anInOutLine);
-			// Persistir la linea
-			if (!anInOutLine.save())
-				throw new ModelException("Error al persistir linea de remito:" + CLogger.retrieveErrorAsString());
-		}
 		
+		// === Si no hay remisión parcial, suponer remisión total
+		if (inOutLines == null || inOutLines.size() == 0) {
+			// Instanciar y persistir las Lineas de remito a partir de las lineas de pedido
+			MOrderLine[] orderLines = anOrder.getLines();
+			for (int i=0; i<orderLines.length; i++)
+			{
+				// Crear nueva linea y setearle los datos originales de la linea de pedido
+				MInOutLine anInOutLine = new MInOutLine(anInOut);
+				anInOutLine.setOrderLine(orderLines[i], 0, orderLines[i].getQtyOrdered());
+				// Copia general de campos de linea
+				CreateFromShipment.copyLineValuesFromOrderLine(anInOut, anOrder, anInOutLine, orderLines[i], getCtx(), getTrxName(), false);
+				// Copiar los datos de la linea de pedido en la linea del remito
+				copyPOValues(orderLines[i], anInOutLine);
+				// Persistir la linea
+				if (!anInOutLine.save())
+					throw new ModelException("Error al persistir linea de remito:" + CLogger.retrieveErrorAsString());
+			}
+		}
+		// === Remision parcial segun inOutLines ===
+		else {
+			for (HashMap<String, String> inOutLineData : inOutLines) {
+				// Crear nueva linea  
+				MInOutLine anInOutLine = new MInOutLine(anInOut);
+				// Recuperar la referencia a la linea de pedido y la cantidad a remitir
+				int orderLineID = -1;
+				BigDecimal qtyEntered = null;
+				try {
+					orderLineID = Integer.parseInt(toLowerCaseKeys(inOutLineData).get("c_orderline_id"));
+				} catch (Exception e) { throw new Exception("C_OrderLine_ID no especificado"); }
+				if (orderLineID < 0)
+					throw new Exception("C_OrderLine_ID incorrecto");
+				try {
+					qtyEntered = new BigDecimal(toLowerCaseKeys(inOutLineData).get("qtyentered"));
+				} catch (Exception e) { throw new Exception("QtyEntered no especificado"); }
+
+				// Crear nueva linea y setearle los datos originales de la linea de pedido, pero con la cantidad redefinida en inOutLineData
+				MOrderLine anOrderLine = new MOrderLine(getCtx(), orderLineID, getTrxName());
+				// Copia general de campos de linea
+				CreateFromShipment.copyLineValuesFromOrderLine(anInOut, anOrder, anInOutLine, anOrderLine, getCtx(), getTrxName(), false);
+				// Forzar datos segun inOutLineData
+				setValues(anInOutLine, inOutLineData, true);
+				anInOutLine.setOrderLine(anOrderLine, 0, qtyEntered);
+				anInOutLine.setQty(qtyEntered);
+				// Copiar los datos de la linea de pedido en la linea del remito
+				copyPOValues(anOrderLine, anInOutLine);
+				
+				// Persistir la linea
+				if (!anInOutLine.save())
+					throw new ModelException("Error al persistir linea de remito:" + CLogger.retrieveErrorAsString());
+			}
+		}
 		// Completar el remito si corresponde
 		if (completeInOut && !DocumentEngine.processAndSave(anInOut, DocAction.ACTION_Complete, false))
 			throw new ModelException("Error al completar el remito:" + Msg.parseTranslation(getCtx(), anInOut.getProcessMsg()));

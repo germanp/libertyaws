@@ -49,7 +49,7 @@ public class CreateFromShipment {
 	
 	}
 	
-	public static void copyLineValuesFromOrderLine(MInOut inOut, MOrder order, MInOutLine inOutLine, MOrderLine orderLine, Properties ctx, String trxName) throws ModelException, Exception
+	public static void copyLineValuesFromOrderLine(MInOut inOut, MOrder order, MInOutLine inOutLine, MOrderLine orderLine, Properties ctx, String trxName, boolean saveLine) throws ModelException, Exception
 	{
 		// Lines
 		Integer productLocatorID = null;
@@ -102,8 +102,8 @@ public class CreateFromShipment {
 			// Este metodo es redefinido por un plugin
 //				customMethod(ol,iol);
 
-		// Guarda la línea de remito
-		if (!inOutLine.save()) {
+		// Guarda la línea de remito (si es requerido via parametro)
+		if (saveLine && !inOutLine.save()) {
 			throw new ModelException("@InOutLineSaveError@ (# "
 					+ orderLine.getLine() + "):<br>"
 					+ CLogger.retrieveErrorAsString());

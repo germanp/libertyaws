@@ -396,6 +396,12 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		return new SimpleResult(resultBean);
 	}
 
+	public SimpleResult inOutCreateFromOrder(Login login, SimpleMap[] header, DocumentLine[] lines, int orderID, boolean completeInOut) {
+		DocumentParameterBean bean = new DocumentParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), header, lines);
+		ResultBean resultBean = new InOutDocumentHandler().inOutCreateFromOrder(bean, orderID, completeInOut);
+		return new SimpleResult(resultBean);		
+	}
+	
 	public SimpleResult inOutDeleteByID(Login login, SimpleMap[] data, int inOutID) {
 		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), data);
 		ResultBean resultBean = new InOutDocumentHandler().inOutDeleteByID(bean, inOutID);

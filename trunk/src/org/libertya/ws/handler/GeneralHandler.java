@@ -548,7 +548,7 @@ public abstract class GeneralHandler {
 	 * Sobrecarga por compatibilidad
 	 */
 	protected HashMap<String, String> poToMap(PO po, boolean includeNamedReferences, HashMap<String, String> baseMap, String additionalPrefix, ArrayList<String> filterColumns) {
-		return poToMap(po, includeNamedReferences, null, "", null, null);
+		return poToMap(po, includeNamedReferences, baseMap, additionalPrefix, filterColumns, null);
 	}
 	
 	/**

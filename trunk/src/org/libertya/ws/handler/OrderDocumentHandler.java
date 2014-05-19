@@ -97,6 +97,12 @@ public class OrderDocumentHandler extends DocumentHandler {
 				if (qtyEntered == null || qtyEntered.length()==0)
 					throw new ModelException("QtyEntered de la linea de pedido no especificado");
 				line.put("QtyOrdered", qtyEntered);
+				// Setear el PriceActual a partir del PriceEntered a fin de evitar errores o inconsistencias en validaciones de modelo (si es que está definido)
+				String priceEntered = toLowerCaseKeys(line).get("priceentered");
+				String priceActual = toLowerCaseKeys(line).get("priceactual");
+				if (priceEntered != null && priceEntered.length()>0 && (priceActual == null || priceActual.length() == 0))
+					line.put("PriceActual", priceEntered);
+				// Setear restantes valores
 				setValues(anOrderLine, line, true);
 				// Setear tax por defecto
 				anOrderLine.setTax();

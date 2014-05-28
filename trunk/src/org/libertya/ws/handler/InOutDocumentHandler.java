@@ -108,7 +108,7 @@ public class InOutDocumentHandler extends DocumentHandler {
 				// Setear el MovementQty a partir del QtyEntered a fin de evitar errores o inconsistencias en validaciones de modelo
 				String qtyEntered = toLowerCaseKeys(line).get("qtyentered");
 				if (qtyEntered == null || qtyEntered.length()==0)
-					throw new ModelException("QtyEntered de la linea de pedido no especificado");
+					throw new ModelException("QtyEntered de la linea de remito no especificado");
 				line.put("MovementQty", qtyEntered);
 				setValues(anInOutLine, line, true);
 				if (!anInOutLine.save())

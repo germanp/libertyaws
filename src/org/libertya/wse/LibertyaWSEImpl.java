@@ -108,6 +108,24 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		return new SimpleResult(resultBean);
 	}
 
+	public synchronized SimpleResult invoiceCreateVendor(Login login, SimpleMap[] data, DocumentLine[] lines, DocumentLine[] otherTaxes, int bPartnerID, String bPartnerValue, String taxID, boolean completeDocument) {
+		InvoiceParameterBean bean = new InvoiceParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), data, lines, otherTaxes);
+		ResultBean resultBean = new InvoiceDocumentHandler().invoiceCreateVendor(bean, bPartnerID, bPartnerValue, taxID, completeDocument);
+		return new SimpleResult(resultBean);
+	}
+
+	public synchronized SimpleResult invoiceCreateVendorFromOrderByID(Login login, SimpleMap[] data, DocumentLine[] lines, DocumentLine[] otherTaxes, int orderID, boolean completeDocument) {
+		InvoiceParameterBean bean = new InvoiceParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), data, lines, otherTaxes);
+		ResultBean resultBean = new InvoiceDocumentHandler().invoiceCreateVendorFromOrderByID(bean, orderID, completeDocument);
+		return new SimpleResult(resultBean);
+	}
+
+	public synchronized SimpleResult invoiceCreateVendorFromOrderByColumn(Login login, SimpleMap[] data, DocumentLine[] lines, DocumentLine[] otherTaxes, String searchColumn, String searchCriteria, boolean completeDocument) {
+		InvoiceParameterBean bean = new InvoiceParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), data, lines, otherTaxes);
+		ResultBean resultBean = new InvoiceDocumentHandler().invoiceCreateVendorFromOrderByColumn(bean, searchColumn, searchCriteria, completeDocument);
+		return new SimpleResult(resultBean);
+	}
+	
 	public synchronized SimpleResult invoiceDeleteByID(Login login, int invoiceID) {
 		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
 		ResultBean resultBean = new InvoiceDocumentHandler().invoiceDeleteByID(bean, invoiceID);

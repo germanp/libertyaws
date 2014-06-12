@@ -112,6 +112,37 @@ public interface LibertyaWS {
 	public ResultBean invoiceCreateCustomerFromOrderByColumn(InvoiceParameterBean data, String searchColumn, String searchCriteria, boolean completeDocument);
 	
 	/**
+	 * Creación de factura de proveedor
+	 * Debe indicarse, además del conjunto de parametros, una de las tres opciones para indicar la entidad comercial
+	 * @param data parametros correspondientes
+	 * @param bPartnerID identificador de la entidad comercial (o -1 en caso de no indicar)
+	 * @param bPartnerValue clave de busqueda de la entidad comercial (o null en caso de no indicar)
+	 * @param taxID CUIT de la entidad comercial (o null en caso de no indicar)
+	 * @param completeDocument para especificar si se debe completar la factura o no
+	 * @return ResultBean con OK y datos: C_Invoice_ID, Invoice_DocumentNo creado, o ERROR en caso contrario.
+	 */
+	public ResultBean invoiceCreateVendor(InvoiceParameterBean data, int bPartnerID, String bPartnerValue, String taxID, boolean completeDocument);
+	
+	/**
+	 * Creación de factura de proveedor a partir de pedido
+	 * @param data parametros correspondientes
+	 * @param orderID el ID del pedido a utilizar como base
+	 * @param completeDocument para especificar si se debe completar la factura o no
+	 * @return ResultBean con OK y datos: C_Invoice_ID, Invoice_DocumentNo creado, o ERROR en caso contrario.
+	 */
+	public ResultBean invoiceCreateVendorFromOrderByID(InvoiceParameterBean data, int orderID, boolean completeDocument);
+	
+	/**
+	 * Creación de factura de proveedor a partir de pedido
+	 * @param data parametros correspondientes
+	 * @param searchColumn y searchCriteria permite buscar un pedido a partir de una columna dada y un valor dado para dicha columna
+	 * 			El criterio especificado filtra además por la organización especificada en los parametros data
+	 * @param completeDocument para especificar si se debe completar la factura o no
+	 * @return ResultBean con OK y datos: C_Invoice_ID, Invoice_DocumentNo creado, o ERROR en caso contrario.
+	 */
+	public ResultBean invoiceCreateVendorFromOrderByColumn(InvoiceParameterBean data, String searchColumn, String searchCriteria, boolean completeDocument);
+	
+	/**
 	 * Elimina una factura en borrador.  La misma debe ser indicada por su ID
 	 * @param data parametros correspondientes
 	 * @param invoiceID identificador de la factura (C_Invoice_ID)

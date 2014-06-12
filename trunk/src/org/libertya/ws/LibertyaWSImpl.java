@@ -85,6 +85,18 @@ public class LibertyaWSImpl implements LibertyaWS {
 		return new InvoiceDocumentHandler().invoiceCreateCustomerFromOrderByColumn(data, searchColumn, searchCriteria, completeDocument);		
 	}
 
+	public synchronized ResultBean invoiceCreateVendor(InvoiceParameterBean data, int bPartnerID, String bPartnerValue, String taxID, boolean completeDocument) {
+		return new InvoiceDocumentHandler().invoiceCreateVendor(data, bPartnerID, bPartnerValue, taxID, completeDocument);
+	}
+	
+	public synchronized ResultBean invoiceCreateVendorFromOrderByID(InvoiceParameterBean data, int orderID, boolean completeDocument) {
+		return new InvoiceDocumentHandler().invoiceCreateVendorFromOrderByID(data, orderID, completeDocument);		
+	}
+		
+	public synchronized ResultBean invoiceCreateVendorFromOrderByColumn(InvoiceParameterBean data, String searchColumn, String searchCriteria, boolean completeDocument) {
+		return new InvoiceDocumentHandler().invoiceCreateVendorFromOrderByColumn(data, searchColumn, searchCriteria, completeDocument);		
+	}
+	
 	public synchronized ResultBean invoiceDeleteByID(ParameterBean data, int invoiceID) {
 		return new InvoiceDocumentHandler().invoiceDeleteByID(data, invoiceID);	
 	}

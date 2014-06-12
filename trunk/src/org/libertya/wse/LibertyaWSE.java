@@ -71,6 +71,21 @@ public interface LibertyaWSE {
 	public SimpleResult invoiceCreateCustomerFromOrderByColumn(Login login, SimpleMap[] data, DocumentLine[] lines, DocumentLine[] otherTaxes, String searchColumn, String searchCriteria, boolean completeDocument);
 
 	/**
+	 * Wrapper para <code>invoiceCreateVendor(InvoiceParameterBean data, int bPartnerID, String bPartnerValue, String taxID, boolean completeDocument)</code>
+	 */
+	public SimpleResult invoiceCreateVendor(Login login, SimpleMap[] data, DocumentLine[] lines, DocumentLine[] otherTaxes, int bPartnerID, String bPartnerValue, String taxID, boolean completeDocument);
+
+	/**
+	 * Wrapper para <code>invoiceCreateVendorFromOrderByID(InvoiceParameterBean data, int orderID, boolean completeDocument)</code>
+	 */
+	public SimpleResult invoiceCreateVendorFromOrderByID(Login login, SimpleMap[] data, DocumentLine[] lines, DocumentLine[] otherTaxes, int orderID, boolean completeDocument);
+
+	/**
+	 * Wrapper para <code>invoiceCreateVendorFromOrderByColumn(InvoiceParameterBean data, String searchColumn, String searchCriteria, boolean completeDocument)</code>
+	 */
+	public SimpleResult invoiceCreateVendorFromOrderByColumn(Login login, SimpleMap[] data, DocumentLine[] lines, DocumentLine[] otherTaxes, String searchColumn, String searchCriteria, boolean completeDocument);
+	
+	/**
 	 * Wrapper para <code>invoiceDeleteByID(ParameterBean data, int invoiceID)</code>
 	 */
 	public SimpleResult invoiceDeleteByID(Login login, int invoiceID);

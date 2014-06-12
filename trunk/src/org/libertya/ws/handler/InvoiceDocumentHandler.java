@@ -26,17 +26,18 @@ import org.openXpertya.util.Trx;
 public class InvoiceDocumentHandler extends DocumentHandler {
 
 	/**
-	 * Creación de factura de cliente
-	 * """"""""""""""""""""""""""""""
+	 * Creación de factura
+	 * """""""""""""""""""
 	 * Debe indicarse, además del conjunto de parametros, una de las tres opciones para indicar la entidad comercial
 	 * @param data parametros correspondientes
+	 * @param isSOTrx true si es de cliente o false si es de proveedor
 	 * @param bPartnerID identificador de la entidad comercial (o -1 en caso de no indicar)
 	 * @param bPartnerValue clave de busqueda de la entidad comercial (o null en caso de no indicar)
 	 * @param taxID CUIT de la entidad comercial (o null en caso de no indicar)
 	 * @param completeDocument para especificar si se debe completar la factura o no
 	 * @return ResultBean con OK, ERROR, etc.
 	 */
-	public ResultBean invoiceCreateCustomer(InvoiceParameterBean data, int bPartnerID, String bPartnerValue, String taxID, boolean completeDocument)
+	protected ResultBean invoiceCreate(InvoiceParameterBean data, boolean isSOTrx, int bPartnerID, String bPartnerValue, String taxID, boolean completeDocument)
 	{
 		try
 		{
@@ -61,7 +62,7 @@ public class InvoiceDocumentHandler extends DocumentHandler {
             if (docTypeTargetID > 1)
                 anInvoice.setC_DocTypeTarget_ID(docTypeTargetID);
 			anInvoice.setBPartner(aBPartner);
-			anInvoice.setIsSOTrx(true);
+			anInvoice.setIsSOTrx(isSOTrx);
 			setValues(anInvoice, data.getMainTable(), true);
 			// En caso de ser necesario, copiar los datos de localización en la cabecera
 			setBPartnerAddressInDocument(anInvoice, bPartnerID);
@@ -145,10 +146,12 @@ public class InvoiceDocumentHandler extends DocumentHandler {
 			HashMap<String, String> result = new HashMap<String, String>();
 			result.put("C_Invoice_ID", Integer.toString(anInvoice.getC_Invoice_ID()));
 			result.put("Invoice_DocumentNo", anInvoice.getDocumentNo());
-			result.put("CAE", anInvoice.getcae());
-			result.put("CAE_Vto", anInvoice.getvtocae()!=null?anInvoice.getvtocae().toString():null);
 			result.put("GrandTotal", anInvoice.getGrandTotal()!=null?anInvoice.getGrandTotal().toString():null);
 			result.put("DueDate", getInvoiceDueDate(anInvoice));
+			if (isSOTrx) {
+				result.put("CAE", anInvoice.getcae());
+				result.put("CAE_Vto", anInvoice.getvtocae()!=null?anInvoice.getvtocae().toString():null);
+			}
 			return new ResultBean(false, null, result);
 		}
 		catch (ModelException me) {
@@ -163,31 +166,61 @@ public class InvoiceDocumentHandler extends DocumentHandler {
 	}
 
 	/**
-	 * Creación de factura a partir de un pedido.  Para determinar el pedido a utilizar se debe especificar su ID
+	 * Creación de factura de cliente
 	 */
-	public ResultBean invoiceCreateCustomerFromOrderByID(InvoiceParameterBean data, int orderID, boolean completeDocument) {
-		return invoiceCreateCustomerFromOrder(data, orderID, null, null, completeDocument);
+	public ResultBean invoiceCreateCustomer(InvoiceParameterBean data, int bPartnerID, String bPartnerValue, String taxID, boolean completeDocument) {
+		return invoiceCreate(data, true, bPartnerID, bPartnerValue, taxID, completeDocument);
+	}
+
+	/**
+	 * Creación de factura de proveedor
+	 */
+	public ResultBean invoiceCreateVendor(InvoiceParameterBean data, int bPartnerID, String bPartnerValue, String taxID, boolean completeDocument) {
+		return invoiceCreate(data, false, bPartnerID, bPartnerValue, taxID, completeDocument);
 	}
 	
 	/**
-	 * Creacion de factura a partir de un pedido.  Para determinr el pedido a utilizar, se debe especificar una columna 
+	 * Creación de factura de cliente a partir de un pedido.  Para determinar el pedido a utilizar se debe especificar su ID
+	 */
+	public ResultBean invoiceCreateCustomerFromOrderByID(InvoiceParameterBean data, int orderID, boolean completeDocument) {
+		return invoiceCreateFromOrder(data, true, orderID, null, null, completeDocument);
+	}
+	
+	/**
+	 * Creacion de factura de cliente a partir de un pedido.  Para determinr el pedido a utilizar, se debe especificar una columna 
 	 * 	en searchColumn y un valor asociado en searchCriteria como dato de búsqueda
 	 */
 	public ResultBean invoiceCreateCustomerFromOrderByColumn(InvoiceParameterBean data, String searchColumn, String searchCriteria, boolean completeDocument) {
-		return invoiceCreateCustomerFromOrder(data, -1, searchColumn, searchCriteria, completeDocument);
+		return invoiceCreateFromOrder(data, true, -1, searchColumn, searchCriteria, completeDocument);
 	}
 	
 	/**
-	 * Creación de factura de cliente a partir de pedido
-	 * """""""""""""""""""""""""""""""""""""""""""""""""
+	 * Creación de factura de proveedor a partir de un pedido.  Para determinar el pedido a utilizar se debe especificar su ID
+	 */
+	public ResultBean invoiceCreateVendorFromOrderByID(InvoiceParameterBean data, int orderID, boolean completeDocument) {
+		return invoiceCreateFromOrder(data, false, orderID, null, null, completeDocument);
+	}
+	
+	/**
+	 * Creacion de factura de proveedor a partir de un pedido.  Para determinr el pedido a utilizar, se debe especificar una columna 
+	 * 	en searchColumn y un valor asociado en searchCriteria como dato de búsqueda
+	 */
+	public ResultBean invoiceCreateVendorFromOrderByColumn(InvoiceParameterBean data, String searchColumn, String searchCriteria, boolean completeDocument) {
+		return invoiceCreateFromOrder(data, false, -1, searchColumn, searchCriteria, completeDocument);
+	}
+	
+	/**
+	 * Creación de factura a partir de pedido
+	 * """"""""""""""""""""""""""""""""""""""
 	 * @param data parametros correspondientes
+	 * @param isSOTrx true si es de cliente o false si es de proveedor
 	 * @param orderID el ID del pedido a utilizar como base
 	 * @param searchColumn y searchCriteria permite buscar un pedido a partir de una columna dada y un valor dado para dicha columna
 	 * 			El criterio especificado filtra además por la organización especificada en los parametros data
 	 * @param completeDocument para especificar si se debe completar la factura o no
 	 * @return ResultBean con OK, ERROR, etc.
 	 */
-	protected ResultBean invoiceCreateCustomerFromOrder(InvoiceParameterBean data, int orderID, String searchColumn, String searchCriteria, boolean completeDocument)
+	protected ResultBean invoiceCreateFromOrder(InvoiceParameterBean data, boolean isSOTrx, int orderID, String searchColumn, String searchCriteria, boolean completeDocument)
 	{
 		try
 		{
@@ -218,7 +251,7 @@ public class InvoiceDocumentHandler extends DocumentHandler {
 			
 			// Instanciar y persistir el Invoice basado en la order
 			MInvoice anInvoice = new MInvoice(anOrder, docTypeTargetID, dateInvoiced);
-			anInvoice.setIsSOTrx(true);
+			anInvoice.setIsSOTrx(isSOTrx);
 			anInvoice.setDateInvoiced(dateInvoiced);
 			anInvoice.setC_DocTypeTarget_ID(docTypeTargetID);
 			// Setear tipo de comprobante y punto de venta si es que vienen en la map
@@ -284,10 +317,12 @@ public class InvoiceDocumentHandler extends DocumentHandler {
 			HashMap<String, String> result = new HashMap<String, String>();
 			result.put("C_Invoice_ID", Integer.toString(anInvoice.getC_Invoice_ID()));
 			result.put("Invoice_DocumentNo", anInvoice.getDocumentNo());
-			result.put("CAE", anInvoice.getcae());
-			result.put("CAE_Vto", anInvoice.getvtocae()!=null?anInvoice.getvtocae().toString():null);
 			result.put("GrandTotal", anInvoice.getGrandTotal()!=null?anInvoice.getGrandTotal().toString():null);
 			result.put("DueDate", getInvoiceDueDate(anInvoice));
+			if (isSOTrx) {
+				result.put("CAE", anInvoice.getcae());
+				result.put("CAE_Vto", anInvoice.getvtocae()!=null?anInvoice.getvtocae().toString():null);
+			}
 			return new ResultBean(false, null, result);
 		}
 		catch (ModelException me) {

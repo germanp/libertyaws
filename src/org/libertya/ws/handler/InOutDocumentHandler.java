@@ -313,7 +313,7 @@ public class InOutDocumentHandler extends DocumentHandler {
 	 * @return ResultBean con OK o ERROR 
 	 */
 	public ResultBean inOutVoidByColumn(ParameterBean data, String columnName, String columnCriteria) {
-		return inOutComplete(data, -1, columnName, columnCriteria);	
+		return inOutVoid(data, -1, columnName, columnCriteria);	
 	}
 
 	

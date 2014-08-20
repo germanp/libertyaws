@@ -1,6 +1,7 @@
 package org.libertya.ws.handler;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -25,6 +26,15 @@ import org.openXpertya.util.Msg;
 import org.openXpertya.util.Trx;
 
 public class OrderDocumentHandler extends DocumentHandler {
+	
+	/** Nombre de campo a redefinir dateInvoiced de la factura al crear/completar pedido */
+	public static final String INVOICE_DATEINVOICED = "Invoice_DateInvoiced";
+	/** Nombre de campo a redefinir dateAcct de la factura al crear/completar pedido */
+	public static final String INVOICE_DATEACCT 	= "Invoice_DateAcct";
+	/** Nombre de campo a redefinir movementDate del remito al crear/completar pedido */
+	public static final String INOUT_MOVEMENTDATE 	= "InOut_MovementDate";
+	/** Nombre de campo a redefinir dateAcct del remito al crear/completar pedido */
+	public static final String INOUT_DATEACCT 		= "InOut_DateAcct";
 	
 	/**
 	 * Creación de pedido de cliente
@@ -116,13 +126,19 @@ public class OrderDocumentHandler extends DocumentHandler {
 			// Crear factura a partir del pedido (si el pedido está completado)
 			MInvoice anInvoice = null;
 			if (completeOrder && createInvoice) {
-				anInvoice = createInvoiceFromOrder(anOrder, data.getInvoiceDocTypeTargetID(), data.getInvoicePuntoDeVenta(), data.getInvoiceTipoComprobante(), completeInvoice);
+				// Recuperar eventual redefinición de dateInvoiced y dateAcct (de no existir, toma la fecha del pedido)
+				Timestamp dateInvoiced = getTimestamp(toLowerCaseKeys(data.getMainTable()).get(INVOICE_DATEINVOICED.toLowerCase()));
+				Timestamp dateAcct = getTimestamp(toLowerCaseKeys(data.getMainTable()).get(INVOICE_DATEACCT.toLowerCase()));
+				anInvoice = createInvoiceFromOrder(anOrder, data.getInvoiceDocTypeTargetID(), data.getInvoicePuntoDeVenta(), data.getInvoiceTipoComprobante(), completeInvoice, dateInvoiced, dateAcct);
 			}
 			
 			// Crear remito a partir del pedido (si el pedido está completado)
 			MInOut anInOut = null;
 			if (completeOrder && createInOut) {
-				anInOut = createInOutFromOrder(anOrder, completeInOut);
+				// Recuperar eventual redefinición de movementDate y dateAcct (de no existir, toma la fecha del pedido)
+				Timestamp movementDate = getTimestamp(toLowerCaseKeys(data.getMainTable()).get(INOUT_MOVEMENTDATE.toLowerCase()));
+				Timestamp dateAcct = getTimestamp(toLowerCaseKeys(data.getMainTable()).get(INOUT_DATEACCT.toLowerCase()));
+				anInOut = createInOutFromOrder(anOrder, completeInOut, movementDate, dateAcct);
 			}
 			
 			/* === Commitear transaccion === */
@@ -243,16 +259,21 @@ public class OrderDocumentHandler extends DocumentHandler {
 			if (!DocumentEngine.processAndSave(anOrder, DocAction.ACTION_Complete, false))
 				throw new ModelException("Error al completar el pedido:" + Msg.parseTranslation(getCtx(), anOrder.getProcessMsg()));
 			
-			
 			// Crear factura a partir del pedido (si corresponde)
 			MInvoice anInvoice = null;
 			if (createInvoice) {
-				anInvoice = createInvoiceFromOrder(anOrder, data.getInvoiceDocTypeTargetID(), data.getInvoicePuntoDeVenta(), data.getInvoiceTipoComprobante(), completeInvoice);
+				// Recuperar eventual redefinición de dateInvoiced y dateAcct (de no existir, toma la fecha del pedido)
+				Timestamp dateInvoiced = getTimestamp(toLowerCaseKeys(data.getMainTable()).get(INVOICE_DATEINVOICED.toLowerCase()));
+				Timestamp dateAcct = getTimestamp(toLowerCaseKeys(data.getMainTable()).get(INVOICE_DATEACCT.toLowerCase()));
+				anInvoice = createInvoiceFromOrder(anOrder, data.getInvoiceDocTypeTargetID(), data.getInvoicePuntoDeVenta(), data.getInvoiceTipoComprobante(), completeInvoice, dateInvoiced, dateAcct);
 			}
 			// Crear remito a partir del pedido (si corresponde)			
 			MInOut anInOut = null;
 			if (createInOut) {
-				anInOut = createInOutFromOrder(anOrder, completeInOut);
+				// Recuperar eventual redefinición de movementDate y dateAcct (de no existir, toma la fecha del pedido)
+				Timestamp movementDate = getTimestamp(toLowerCaseKeys(data.getMainTable()).get(INOUT_MOVEMENTDATE.toLowerCase()));
+				Timestamp dateAcct = getTimestamp(toLowerCaseKeys(data.getMainTable()).get(INOUT_DATEACCT.toLowerCase()));
+				anInOut = createInOutFromOrder(anOrder, completeInOut, movementDate, dateAcct);
 			}
 			
 			/* === Retornar valor === */
@@ -333,11 +354,18 @@ public class OrderDocumentHandler extends DocumentHandler {
 	 * Gestiona la creación de una factura a partir del pedido, apoyandose en la clase CreateFromInvoice.
 	 * La creación varia con respecto a la lógica en InvoiceDocumentHandler, y es por ésto que 
 	 * fue necesario crear este método. 
+	 * @param anOrder pedido a partir del cual se creará la factura
+	 * @param invoiceDocTypeTargetID tipo de documento destino
+	 * @param invoicePuntoDeVenta punto de venta
+	 * @param invoiceTipoComprobante tipo de comprobante
+	 * @param completeInvoice si debe completarse la factura
+	 * @param dateInvoiced redefinición del valor (o se copia el dateOrdered del pedido en caso de recibir null)
+	 * @param dateAcct redefinición del valor (o se copia el dateAcct del pedido en caso de recibir null)
 	 */
-	protected MInvoice createInvoiceFromOrder(MOrder anOrder, int invoiceDocTypeTargetID, int invoicePuntoDeVenta, String invoiceTipoComprobante, boolean completeInvoice) throws ModelException, Exception 
+	protected MInvoice createInvoiceFromOrder(MOrder anOrder, int invoiceDocTypeTargetID, int invoicePuntoDeVenta, String invoiceTipoComprobante, boolean completeInvoice, Timestamp dateInvoiced, Timestamp dateAcct) throws ModelException, Exception 
 	{
 		// Instanciar la nueva factura
-		MInvoice anInvoice = new MInvoice(anOrder, invoiceDocTypeTargetID, Env.getDate());
+		MInvoice anInvoice = new MInvoice(anOrder, invoiceDocTypeTargetID, anOrder.getDateOrdered());
 		// Setear los parametros adicionales sobre el tipo de documento a generar
 		anInvoice.setC_DocTypeTarget_ID(invoiceDocTypeTargetID);
 		anInvoice.setPuntoDeVenta(invoicePuntoDeVenta);
@@ -346,9 +374,15 @@ public class OrderDocumentHandler extends DocumentHandler {
 		CreateFromInvoice.copyHeaderValuesFromOrder(anInvoice, anOrder, getCtx(), getTrxName());
 		// Copiar los datos del pedido en la factura
 		copyPOValues(anOrder, anInvoice);
+		
+		// Redefinir dateInvoiced y dateAcct en caso de estar seteadas, sino tomar la del pedido
+		anInvoice.setDateInvoiced(dateInvoiced != null ? dateInvoiced : anOrder.getDateOrdered());
+		anInvoice.setDateAcct(dateAcct != null ? dateAcct : anOrder.getDateAcct());
+		
+		// Almacenar la cabecera
 		if (!anInvoice.save())
 			throw new ModelException("Error al persistir Factura:" + CLogger.retrieveErrorAsString());
-
+		
 		// Instanciar y persistir las Lineas de factura a partir de las lineas de pedido
 		MOrderLine[] orderLines = anOrder.getLines();
 		for (int i=0; i<orderLines.length; i++)
@@ -377,20 +411,22 @@ public class OrderDocumentHandler extends DocumentHandler {
 	/**
 	 * Sobrecarga por compatibilidad
 	 */
-	protected MInOut createInOutFromOrder(MOrder anOrder, boolean completeInOut) throws ModelException, Exception {
-		return createInOutFromOrder(anOrder, completeInOut, null);
+	protected MInOut createInOutFromOrder(MOrder anOrder, boolean completeInOut, Timestamp movementDate, Timestamp dateAcct) throws ModelException, Exception {
+		return createInOutFromOrder(anOrder, completeInOut, null, movementDate, dateAcct);
 	}
 	
 	/**
 	 * Gestiona la creación de un remito a partir del pedido, apoyandose en la clase CreateFromShipment.
 	 * @param anOrder pedido sobre el cual tomar la informacion
-	 * @param completeInOut si se desea completar el pedido
+	 * @param completeInOut si se desea completar el remito
 	 * @param inOutLines para remisiones parciales (se debe indicar para cada línea el C_OrderLine_ID y QtyEntered), si no se especifica se supone que el pedido se remite completamente
+	 * @param movementDate redefinición del valor (o se copia el dateOrdered  del pedido en caso de recibir null)
+	 * @param dateAcct redefinición del valor (o se copia el dateAcct del pedido en caso de recibir null)
 	 */
-	protected MInOut createInOutFromOrder(MOrder anOrder, boolean completeInOut, ArrayList<HashMap<String, String>> inOutLines) throws ModelException, Exception 
+	protected MInOut createInOutFromOrder(MOrder anOrder, boolean completeInOut, ArrayList<HashMap<String, String>> inOutLines, Timestamp movementDate, Timestamp dateAcct) throws ModelException, Exception 
 	{
 		// Instanciar el nuevo remito
-		MInOut anInOut = new MInOut(anOrder, 0, Env.getDate());
+		MInOut anInOut = new MInOut(anOrder, 0, anOrder.getDateOrdered());
 		// Copia general de campos de cabecera
 		CreateFromShipment.copyHeaderValuesFromOrder(anInOut, anOrder, getCtx(), getTrxName());
 		// Copiar los datos del pedido en el remito
@@ -398,6 +434,10 @@ public class OrderDocumentHandler extends DocumentHandler {
 		// Setear el tipo de documento
 		anInOut.setC_DocType_ID();
 
+		// Setear movementDate y dateAcct en caso de estar seteadas, sino tomar la del pedido
+		anInOut.setMovementDate(movementDate != null ? movementDate : anOrder.getDateOrdered());
+		anInOut.setDateAcct(dateAcct != null ? dateAcct : anOrder.getDateAcct());
+		
 		if (!anInOut.save())
 			throw new ModelException("Error al persistir Remito:" + CLogger.retrieveErrorAsString());
 		

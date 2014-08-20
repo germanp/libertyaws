@@ -974,7 +974,23 @@ public abstract class GeneralHandler {
 
 	}
 	
-		
+	/**
+	 * Retorna un timestamp si value es distinto a null, o null en caso contrario
+	 * @param value a convertir en Timestamp
+	 * @return el valor convertido a Timestamp
+	 * @throws Exception en caso de un error en la conversión
+	 */
+	public Timestamp getTimestamp(String value) throws Exception {
+		if (value==null)
+			return null;
+		try {
+			return Timestamp.valueOf(value);
+		} catch (Exception e) {
+			throw new Exception("Error al convertir Timestamp con valor " + value + ". " + e.toString());
+		}
+	}
+	
+	
 	/* ========================================== Implementacion de caches ========================================== */
 	
 	/** Cache de AD_Ref_Table: AD_Reference_ID -> AD_Table_ID */

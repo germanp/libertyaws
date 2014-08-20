@@ -156,7 +156,7 @@ public class InOutDocumentHandler extends DocumentHandler {
 			// Recuperar el pedido
 			MOrder anOrder = new MOrder(getCtx(), orderID, getTrxName());
 			// Crear el remito a partir del pedido
-			MInOut anInOut = new OrderDocumentHandler().createInOutFromOrder(anOrder, completeInOut, data.getDocumentLines());
+			MInOut anInOut = new OrderDocumentHandler().createInOutFromOrder(anOrder, completeInOut, data.getDocumentLines(), null, null);
 			
 			/* === Commitear transaccion === */
 			Trx.getTrx(getTrxName()).commit();

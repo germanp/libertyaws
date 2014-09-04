@@ -391,31 +391,31 @@ public class LibertyaWSImpl implements LibertyaWS {
 	/* ========================= Inventario ============================= */
 	/* ================================================================== */
 	
-	public ResultBean inventoryCreate(DocumentParameterBean data, boolean completeInventory) {
+	public synchronized ResultBean inventoryCreate(DocumentParameterBean data, boolean completeInventory) {
 		return new InventoryDocumentHandler().inventoryCreate(data, completeInventory);
 	}
 
-	public ResultBean inventoryCompleteByID(ParameterBean data, int inventoryID) {
+	public synchronized ResultBean inventoryCompleteByID(ParameterBean data, int inventoryID) {
 		return new InventoryDocumentHandler().inventoryCompleteByID(data, inventoryID);
 	}
 
-	public ResultBean inventoryCompleteByColumn(ParameterBean data, String columnName, String value) {
+	public synchronized ResultBean inventoryCompleteByColumn(ParameterBean data, String columnName, String value) {
 		return new InventoryDocumentHandler().inventoryCompleteByColumn(data, columnName, value);
 	}
 
-	public ResultBean inventoryDeleteByID(ParameterBean data, int inventoryID) {
+	public synchronized ResultBean inventoryDeleteByID(ParameterBean data, int inventoryID) {
 		return new InventoryDocumentHandler().inventoryDeleteByID(data, inventoryID);
 	}
 
-	public ResultBean inventoryDeleteByColumn(ParameterBean data, String columnName, String value) {
+	public synchronized ResultBean inventoryDeleteByColumn(ParameterBean data, String columnName, String value) {
 		return new InventoryDocumentHandler().inventoryDeleteByColumn(data, columnName, value);
 	}
 
-	public ResultBean inventoryVoidByID(ParameterBean data, int inventoryID) {
+	public synchronized ResultBean inventoryVoidByID(ParameterBean data, int inventoryID) {
 		return new InventoryDocumentHandler().inventoryVoidByID(data, inventoryID);
 	}
 
-	public ResultBean inventoryVoidByColumn(ParameterBean data, String columnName, String value) {
+	public synchronized ResultBean inventoryVoidByColumn(ParameterBean data, String columnName, String value) {
 		return new InventoryDocumentHandler().inventoryVoidByColumn(data, columnName, value);
 	}
 	
@@ -423,19 +423,19 @@ public class LibertyaWSImpl implements LibertyaWS {
 	/* ====================== Direcciones de EC ========================= */
 	/* ================================================================== */
 	
-	public ResultBean bPartnerLocationCreate(ParameterBean data) {
+	public synchronized ResultBean bPartnerLocationCreate(ParameterBean data) {
 		return new BPartnerLocationCRUDHandler().bPartnerLocationCreate(data);
 	}
 
-	public ResultBean bPartnerLocationUpdate(ParameterBean data, int bPartnerLocationID) {
+	public synchronized ResultBean bPartnerLocationUpdate(ParameterBean data, int bPartnerLocationID) {
 		return new BPartnerLocationCRUDHandler().bPartnerLocationUpdate(data, bPartnerLocationID);
 	}
 
-	public ResultBean bPartnerLocationDelete(ParameterBean data, int bPartnerLocationID) {
+	public synchronized ResultBean bPartnerLocationDelete(ParameterBean data, int bPartnerLocationID) {
 		return new BPartnerLocationCRUDHandler().bPartnerLocationDelete(data, bPartnerLocationID);
 	}
 
-	public ResultBean bPartnerLocationRetrieve(ParameterBean data, int bPartnerLocationID) {
+	public synchronized ResultBean bPartnerLocationRetrieve(ParameterBean data, int bPartnerLocationID) {
 		return new BPartnerLocationCRUDHandler().bPartnerLocationRetrieve(data, bPartnerLocationID);
 	}
 
@@ -443,15 +443,15 @@ public class LibertyaWSImpl implements LibertyaWS {
 	/* ===================== Precios de artículos ======================= */
 	/* ================================================================== */
 	
-	public ResultBean productPriceCreateUpdate(ParameterBean data) {
+	public synchronized ResultBean productPriceCreateUpdate(ParameterBean data) {
 		return new ProductPriceCRUDHandler().productPriceCreateUpdate(data);
 	}
 
-	public ResultBean productPriceDelete(ParameterBean data, int productID, int priceListVersionID) {
+	public synchronized ResultBean productPriceDelete(ParameterBean data, int productID, int priceListVersionID) {
 		return new ProductPriceCRUDHandler().productPriceDelete(data, productID, priceListVersionID);
 	}
 
-	public ResultBean productPriceRetrieve(ParameterBean data, int productID, int priceListVersionID) {
+	public synchronized ResultBean productPriceRetrieve(ParameterBean data, int productID, int priceListVersionID) {
 		return new ProductPriceCRUDHandler().productPriceRetrieve(data, productID, priceListVersionID); 
 	}
 
@@ -459,19 +459,19 @@ public class LibertyaWSImpl implements LibertyaWS {
 	/* ===================== Ordenes de Producción ====================== */
 	/* ================================================================== */
 	
-	public ResultBean productionOrderCreate(DocumentParameterBean data, boolean completeProductionOrder) {
+	public synchronized ResultBean productionOrderCreate(DocumentParameterBean data, boolean completeProductionOrder) {
 		return new ProductionOrderDocumentHandler().productionOrderCreate(data, completeProductionOrder);
 	}
 
-	public ResultBean productionOrderDelete(ParameterBean data, int productionOrderID) {
+	public synchronized ResultBean productionOrderDelete(ParameterBean data, int productionOrderID) {
 		return new ProductionOrderDocumentHandler().productionOrderDelete(data, productionOrderID);
 	}
 
-	public ResultBean productionOrderComplete(ParameterBean data, int productionOrderID) {
+	public synchronized ResultBean productionOrderComplete(ParameterBean data, int productionOrderID) {
 		return new ProductionOrderDocumentHandler().productionOrderComplete(data, productionOrderID);
 	}
 
-	public ResultBean productionOrderVoid(ParameterBean data, int productionOrderID) {
+	public synchronized ResultBean productionOrderVoid(ParameterBean data, int productionOrderID) {
 		return new ProductionOrderDocumentHandler().productionOrderVoid(data, productionOrderID);
 	}
 
@@ -479,19 +479,19 @@ public class LibertyaWSImpl implements LibertyaWS {
 	/* ====================== Boletas de depósito ======================= */
 	/* ================================================================== */
 	
-	public ResultBean depositSlipCreate(DocumentParameterBean data, boolean completeDepositSlip) {
+	public synchronized ResultBean depositSlipCreate(DocumentParameterBean data, boolean completeDepositSlip) {
 		return new DepositSlipDocumentHandler().depositSlipCreate(data, completeDepositSlip);
 	}
 
-	public ResultBean depositSlipDelete(ParameterBean data, int depositSlipID) {
+	public synchronized ResultBean depositSlipDelete(ParameterBean data, int depositSlipID) {
 		return new DepositSlipDocumentHandler().depositSlipDelete(data, depositSlipID);
 	}
 
-	public ResultBean depositSlipComplete(ParameterBean data, int depositSlipID) {
+	public synchronized ResultBean depositSlipComplete(ParameterBean data, int depositSlipID) {
 		return new DepositSlipDocumentHandler().depositSlipComplete(data, depositSlipID);
 	}
 
-	public ResultBean depositSlipVoid(ParameterBean data, int depositSlipID) {
+	public synchronized ResultBean depositSlipVoid(ParameterBean data, int depositSlipID) {
 		return new DepositSlipDocumentHandler().depositSlipVoid(data, depositSlipID);
 	}
 
@@ -499,11 +499,11 @@ public class LibertyaWSImpl implements LibertyaWS {
 	/* ====================== Lista de materiales ======================= */
 	/* ================================================================== */
 
-	public ResultBean billOfMaterialCreate(ParameterBean data) {
+	public synchronized ResultBean billOfMaterialCreate(ParameterBean data) {
 		return new BillOfMaterialCRUDHandler().billOfMaterialCreate(data);
 	}
 
-	public ResultBean billOfMaterialDelete(ParameterBean data, int productBOMId) {
+	public synchronized ResultBean billOfMaterialDelete(ParameterBean data, int productBOMId) {
 		return new BillOfMaterialCRUDHandler().billOfMaterialDelete(data, productBOMId);
 	}
 

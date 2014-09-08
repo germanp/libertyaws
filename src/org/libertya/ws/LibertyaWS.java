@@ -175,18 +175,22 @@ public interface LibertyaWS {
 	public ResultBean invoiceCompleteByColumn(ParameterBean data, String columnName, String columnCriteria);
 	
 	/**
-	 * Anula una factura en borrador.  La misma debe ser indicada por su ID
+	 * Anula una factura.  La misma debe ser indicada por su ID
 	 * @param data parametros correspondientes
 	 * @param invoiceID identificador de la factura (C_Invoice_ID)
 	 * @return ResultBean con OK o ERROR 
+	 * 			En el resultado se incluye la clave CreditNote_DocumentNo, en donde se cuarda el número de documento de la nota de crédito eventualmente creada
 	 */
 	public ResultBean invoiceVoidByID(ParameterBean data, int invoiceID);
 	
 	/**
-	 * Anula una factura en borrador.  La misma debe ser indicada por un par: Nombre de Columna / Criterio de Columna
+	 * Anula una factura o más facturas.  Las mismas deben ser indicadas por un par: Nombre de Columna / Criterio de Columna
+	 * En caso de recuperar más de una factura se anularán todas.  En caso de error en alguna no se anulará ninguna.
 	 * @param data parametros correspondientes
 	 * @param columnName y columnCriteria columna y valor a filtrar para recuperar la factura en cuestion
 	 * @return ResultBean con OK o ERROR 
+	 * 	 		En el resultado se incluye la clave CreditNote_DocumentNo, en donde se cuarda el número de documento de la nota de crédito eventualmente creada
+	 * 			Si se está anulando más de una factura, se crearán las claves Credit_DocumentNo_For_InvoiceID_XXX  (donde XXX es el número de factura)
 	 */
 	public ResultBean invoiceVoidByColumn(ParameterBean data, String columnName, String columnCriteria);
 
@@ -577,7 +581,7 @@ public interface LibertyaWS {
 	public ResultBean orderCompleteByColumn(OrderParameterBean data, String columnName, String columnCriteria, boolean createInvoice, boolean completeInvoice, boolean createShipment, boolean completeShipment);
 	
 	/**
-	 * Anula un pedido en borrador.  El mismo debe ser indicado por su ID
+	 * Anula un pedido.  El mismo debe ser indicado por su ID
 	 * @param data parametros correspondientes
 	 * @param orderID identificador del pedido (C_Order_ID)
 	 * @return ResultBean con OK o ERROR 
@@ -585,7 +589,8 @@ public interface LibertyaWS {
 	public ResultBean orderVoidByID(ParameterBean data, int orderID);
 	
 	/**
-	 * Anula un pedido en borrador.  El mismo debe ser indicado por un par: Nombre de Columna / Criterio de Columna
+	 * Anula uno o más pedidos.  Los mismos deben ser indicados por un par: Nombre de Columna / Criterio de Columna
+	 * En caso de recuperar más de un pedido se anularán todos.  En caso de error en alguno no se anulará ninguno.
 	 * @param data parametros correspondientes
 	 * @param columnName y columnCriteria columna y valor a filtrar para recuperar el pedido en cuestion
 	 * @return ResultBean con OK o ERROR 
@@ -682,7 +687,7 @@ public interface LibertyaWS {
 	public ResultBean inOutCompleteByColumn(ParameterBean data, String columnName, String columnCriteria);
 
 	/**
-	 * Anula un remito en borrador.  El mismo debe ser indicado por su ID
+	 * Anula un remito.  El mismo debe ser indicado por su ID
 	 * @param data parametros correspondientes
 	 * @param inOutID identificador del remito (M_InOut_ID)
 	 * @return ResultBean con OK o ERROR 
@@ -690,7 +695,8 @@ public interface LibertyaWS {
 	public ResultBean inOutVoidByID(ParameterBean data, int inOutID);
 	
 	/**
-	 * Anula un remito en borrador.  El mismo debe ser indicado por un par: Nombre de Columna / Criterio de Columna
+	 * Anula un remito.  El mismo debe ser indicado por un par: Nombre de Columna / Criterio de Columna
+	 * En caso de recuperar más de un remito se anularán todos.  En caso de error en alguno no se anulará ninguno.
 	 * @param data parametros correspondientes
 	 * @param columnName y columnCriteria columna y valor a filtrar para recuperar el remito en cuestion
 	 * @return ResultBean con OK o ERROR 
@@ -800,6 +806,19 @@ public interface LibertyaWS {
 	 * @return ResultBean con OK o ERROR. 
 	 */
 	public ResultBean allocationVoidByID(AllocationParameterBean data, int allocationID, String allocationAction);
+	
+	/**
+	 * Realiza la anulación de un Recibo emitido previamente
+	 *  En caso de recuperar más de un recibo se anularán todos.  En caso de error en alguno no se anulará ninguno.
+	 * @param data información basica de acceso
+	 * @param columnName y columnCriteria es  el criterio de búsqueda para recuperar los recibos
+	 * @param allocationAction tipo de anulación:
+	 * 		Revertir unicamente <code>AllocationParameterBean.ALLOCATIONACTION_RevertAllocation</code>, o bien 
+	 *		Revertir y Anular Cobros <code>ALLOCATIONACTION_VoidPayments</code>, o bien
+	 *		Revertir y Anular Cobros y Retenciones <code>ALLOCATIONACTION_VoidPaymentsRetentions</code>. 
+	 * @return ResultBean con OK o ERROR. 
+	 */
+	public ResultBean allocationVoidByColumn(AllocationParameterBean data, String columnName, String columnCriteria, String allocationAction);
 	
 	
 	/* ================================================================== */
@@ -916,7 +935,8 @@ public interface LibertyaWS {
 	public ResultBean inventoryVoidByID(ParameterBean data, int inventoryID);
 	
 	/**
-	 * Permite anular un inventario especificando el mismo mediante una columna y su valor
+	 * Permite anular uno o más inventarios especificando el mismo mediante una columna y su valor
+	 * En caso de recuperar más de un inventario se anularán todos.  En caso de error en alguno no se anulará ninguno.
 	 * @param data parametros de acceso
 	 * @param columnName columna a filtrar para recuperar el inventario en cuestión
 	 * @param value valor a filtrar para recuperar el inventario en cuestión
@@ -1036,7 +1056,15 @@ public interface LibertyaWS {
 	 * @return ResultBean OK o ERROR en caso de error.
 	 */
 	public ResultBean productionOrderVoid(ParameterBean data, int productionOrderID);
-	
+
+	/**
+	 * Anula una o más ordenes de producción
+	 * En caso de recuperar más de una orden se anularán todas.  En caso de error en alguna no se anulará ninguna.
+	 * @param data parametros de acceso
+	 * @param columnName y columnCriteria son los criterios de recuperación de las ordenes de producción
+	 * @return ResultBean OK o ERROR en caso de error.
+	 */
+	public ResultBean productionOrderVoidByColumn(ParameterBean data, String columnName, String columnCriteria);
 	
 	/* ================================================================== */
 	/* ====================== Boletas de depósito ======================= */
@@ -1073,6 +1101,15 @@ public interface LibertyaWS {
 	 * @return ResultBean OK o ERROR en caso de error.
 	 */
 	public ResultBean depositSlipVoid(ParameterBean data, int depositSlipID);
+	
+	/**
+	 * Anula una o más boletas de depósito
+	 * En caso de recuperar más de una boleta se anularán todas.  En caso de error en alguna no se anulará ninguna.
+	 * @param data parametros de acceso
+	 * @param columnName y columnCriteria son los criterios de recuperación de las boletas de deposito
+	 * @return ResultBean OK o ERROR en caso de error.
+	 */
+	public ResultBean depositSlipVoidByColumn(ParameterBean data, String columnName, String columnCriteria);
 	
 	
 	/* ================================================================== */

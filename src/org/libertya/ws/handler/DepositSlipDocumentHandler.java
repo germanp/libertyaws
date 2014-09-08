@@ -8,6 +8,7 @@ import org.libertya.ws.bean.result.ResultBean;
 import org.libertya.ws.exception.ModelException;
 import org.openXpertya.model.MBoletaDeposito;
 import org.openXpertya.model.MBoletaDepositoLine;
+import org.openXpertya.model.PO;
 import org.openXpertya.process.DocAction;
 import org.openXpertya.process.DocumentEngine;
 import org.openXpertya.util.CLogger;
@@ -142,21 +143,41 @@ public class DepositSlipDocumentHandler extends GeneralHandler {
 	}
 
 	/**
-	 * Anula una boleta de depósito
+	 * Anula una boleta de depósito por ID
 	 */
-	public ResultBean depositSlipVoid(ParameterBean data, int depositSlipID) 
-	{
+	public ResultBean depositSlipVoid(ParameterBean data, int depositSlipID) {
+		return depositSlipVoid(data, depositSlipID, null, null);
+	}
+
+	/**
+	 * Anula una o más boletas de depósito 
+	 */
+	public ResultBean depositSlipVoidByColumn(ParameterBean data, String columnName, String columnCriteria) {
+		return depositSlipVoid(data, -1, columnName, columnCriteria);
+	}
+	
+	/**
+	 * 	Anula uno o más boletas de depósito.  Las mismas pueden ser indicadas por su ID, o por un par: Nombre de Columna / Criterio de Columna
+	 * 		Utilizando la segunda opción, en caso de recuperar más de una boleta se anularán todas.  En caso de error en alguna no se anulará ninguna.
+	 * @param data datos de acceso
+	 * @param depositSlipID id para recuperar el registro a anular
+	 * @param columnName y columnCriteria criterio para recuperar uno o más registros	 * @return
+	 */
+	protected ResultBean depositSlipVoid(ParameterBean data, int depositSlipID, String columnName, String columnCriteria) {
 		try
 		{
 			/* === Configuracion inicial === */
-			init(data, new String[]{"depositSlipID"}, new Object[]{depositSlipID});
+			init(data, new String[]{"depositSlipID", "columnName", "columnCriteria"}, new Object[]{depositSlipID, columnName, columnCriteria});
 			
 			/* === Procesar (logica especifica) === */
 			// Recuperar la boleta de deposito
-			MBoletaDeposito aBoletaDeposito = (MBoletaDeposito)getPO("M_BoletaDeposito", depositSlipID, null, null, false, true, true, true);
-			if (!DocumentEngine.processAndSave(aBoletaDeposito, DocAction.ACTION_Void, false))
-				throw new ModelException("Error al anular la boleta de deposito:" + Msg.parseTranslation(getCtx(), aBoletaDeposito.getProcessMsg()));
-
+			PO[] pos = getPOs("M_BoletaDeposito", depositSlipID, columnName, columnCriteria, false, true, false, true);
+			for (PO po : pos) {
+				if (!DocumentEngine.processAndSave((DocAction)po, DocAction.ACTION_Void, false)) {
+					throw new ModelException("Error al anular la boleta de deposito:" + Msg.parseTranslation(getCtx(), ((DocAction)po).getProcessMsg()));
+				}
+			}
+			
 			/* === Commitear transaccion === */
 			Trx.getTrx(getTrxName()).commit();
 			
@@ -172,5 +193,6 @@ public class DepositSlipDocumentHandler extends GeneralHandler {
 		finally	{
 			closeTransaction();
 		}
+		
 	}
 }

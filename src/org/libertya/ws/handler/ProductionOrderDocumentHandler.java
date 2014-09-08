@@ -8,6 +8,7 @@ import org.libertya.ws.bean.result.ResultBean;
 import org.libertya.ws.exception.ModelException;
 import org.openXpertya.model.MProductionOrder;
 import org.openXpertya.model.MProductionOrderline;
+import org.openXpertya.model.PO;
 import org.openXpertya.process.DocAction;
 import org.openXpertya.process.DocumentEngine;
 import org.openXpertya.util.CLogger;
@@ -132,20 +133,42 @@ public class ProductionOrderDocumentHandler extends GeneralHandler {
 	}
 
 	/**
-	 * Anula una orden de producción
+	 * Anula una order de producción por su ID
 	 */
-	public ResultBean productionOrderVoid(ParameterBean data, int productionOrderID) 
+	public ResultBean productionOrderVoid(ParameterBean data, int depositSlipID) {
+		return productionOrderVoid(data, depositSlipID, null, null);
+	}
+
+	/**
+	 * Anula una o más ordenes de producción 
+	 */
+	public ResultBean productionOrderVoidByColumn(ParameterBean data, String columnName, String columnCriteria) {
+		return productionOrderVoid(data, -1, columnName, columnCriteria);
+	}
+	
+	/**
+	 * 	Anula uno o más ordenes de producción.  Las mismas pueden ser indicadas por su ID, o por un par: Nombre de Columna / Criterio de Columna
+	 * 		Utilizando la segunda opción, en caso de recuperar más de una orden se anularán todas.  En caso de error en alguna no se anulará ninguna.
+	 * @param data datos de acceso
+	 * @param productionOrderID id para recuperar el registro a anular
+	 * @param columnName y columnCriteria criterio para recuperar uno o más registros
+	 * @return
+	 */
+	protected ResultBean productionOrderVoid(ParameterBean data, int productionOrderID, String columnName, String columnCriteria) 
 	{
 		try
 		{
 			/* === Configuracion inicial === */
-			init(data, new String[]{"productionOrderID"}, new Object[]{productionOrderID});
+			init(data, new String[]{"productionOrderID", "columnName", "columnCriteria"}, new Object[]{productionOrderID, columnName, columnCriteria});
 			
 			/* === Procesar (logica especifica) === */
 			// Recuperar la orden de producción
-			MProductionOrder aProductionOrder = (MProductionOrder)getPO("C_Production_Order", productionOrderID, null, null, false, true, true, true);
-			if (!DocumentEngine.processAndSave(aProductionOrder, DocAction.ACTION_Void, false))
-				throw new ModelException("Error al anular la order:" + Msg.parseTranslation(getCtx(), aProductionOrder.getProcessMsg()));
+			PO[] pos = getPOs("C_Production_Order", productionOrderID, columnName, columnCriteria, false, true, false, true);
+			for (PO po : pos) {
+				if (!DocumentEngine.processAndSave((DocAction)po, DocAction.ACTION_Void, false)) {
+					throw new ModelException("Error al anular la orden de produccion:" + Msg.parseTranslation(getCtx(), ((DocAction)po).getProcessMsg()));
+				}
+			}
 			
 			/* === Commitear transaccion === */
 			Trx.getTrx(getTrxName()).commit();

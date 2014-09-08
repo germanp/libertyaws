@@ -358,6 +358,10 @@ public class LibertyaWSImpl implements LibertyaWS {
 	public synchronized ResultBean allocationVoidByID(AllocationParameterBean data, int allocationID, String allocationAction) {
 		return new AllocationDocumentHandler().allocationVoidByID(data, allocationID, allocationAction);
 	}
+	
+	public synchronized ResultBean allocationVoidByColumn(AllocationParameterBean data, String columnName, String columnCriteria, String allocationAction) {
+		return new AllocationDocumentHandler().allocationVoidByColumn(data, columnName, columnCriteria, allocationAction);
+	}
 
 	/* ================================================================== */
 	/* =========================== Usuarios ============================= */
@@ -474,6 +478,10 @@ public class LibertyaWSImpl implements LibertyaWS {
 	public synchronized ResultBean productionOrderVoid(ParameterBean data, int productionOrderID) {
 		return new ProductionOrderDocumentHandler().productionOrderVoid(data, productionOrderID);
 	}
+	
+	public synchronized ResultBean productionOrderVoidByColumn(ParameterBean data, String columnName, String columnCriteria) {
+		return new ProductionOrderDocumentHandler().productionOrderVoidByColumn(data, columnName, columnCriteria);
+	}
 
 	/* ================================================================== */
 	/* ====================== Boletas de depósito ======================= */
@@ -495,6 +503,10 @@ public class LibertyaWSImpl implements LibertyaWS {
 		return new DepositSlipDocumentHandler().depositSlipVoid(data, depositSlipID);
 	}
 
+	public synchronized ResultBean depositSlipVoidByColumn(ParameterBean data, String columnName, String columnCriteria) {
+		return new DepositSlipDocumentHandler().depositSlipVoidByColumn(data, columnName, columnCriteria);
+	}
+	
 	/* ================================================================== */
 	/* ====================== Lista de materiales ======================= */
 	/* ================================================================== */

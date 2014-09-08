@@ -407,6 +407,11 @@ public interface LibertyaWSE {
 	 */
 	public SimpleResult allocationVoidByID(Login login, int allocationID, String allocationAction);
 
+	/**
+	 * Wrapper para <code>allocationVoidByColumn(AllocationParameterBean data, String columnName, String columnCriteria, String allocationAction)</code> 
+	 */
+	public SimpleResult allocationVoidByColumn(Login login, String columnName, String columnCriteria, String allocationAction);
+
 	/* ================================================================== */
 	/* =========================== Usuarios ============================= */
 	/* ================================================================== */
@@ -538,7 +543,11 @@ public interface LibertyaWSE {
 	 * Wrapper para <code>productionOrderVoid(ParameterBean data, int productionOrderID)</code> 
 	 */
 	public SimpleResult productionOrderVoid(Login login, int productionOrderID);
-	
+
+	/**
+	 * Wrapper para <code>productionOrderVoidByColumn(ParameterBean data, String columnName, String columnCriteria)</code> 
+	 */
+	public SimpleResult productionOrderVoidByColumn(Login login, String columnName, String columnCriteria);
 	
 	/* ================================================================== */
 	/* ====================== Boletas de depósito ======================= */
@@ -564,6 +573,10 @@ public interface LibertyaWSE {
 	 */
 	public SimpleResult depositSlipVoid(Login login, int depositSlipID);
 	
+	/**
+	 * Wrapper para <code>depositSlipVoidByColumn(ParameterBean data, String columnName, String columnCriteria)</code>
+	 */
+	public SimpleResult depositSlipVoidByColumn(Login login, String columnName, String columnCriteria);
 	
 	/* ================================================================== */
 	/* ====================== Lista de materiales ======================= */

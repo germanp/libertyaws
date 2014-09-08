@@ -18,6 +18,7 @@ import org.openXpertya.model.MInvoice;
 import org.openXpertya.model.MInvoiceLine;
 import org.openXpertya.model.MOrder;
 import org.openXpertya.model.MOrderLine;
+import org.openXpertya.model.PO;
 import org.openXpertya.process.DocAction;
 import org.openXpertya.process.DocumentEngine;
 import org.openXpertya.util.CLogger;
@@ -300,25 +301,25 @@ public class OrderDocumentHandler extends DocumentHandler {
 	}
 	
 	/**
-	 * Anula un pedido en borrador, el cual es indicado por su ID
+	 * Anula un pedido, el cual es indicado por su ID
 	 */
 	public ResultBean orderVoidByID(ParameterBean data, int orderID) {
 		return orderVoid(data, orderID, null, null);
 	}
 	
 	/**
-	 * Anula un pedido en borrador, el cual es indicado por una columna y un criterio de busqueda
+	 * Anula pedidos, indicados por una columna y un criterio de busqueda
 	 */
 	public ResultBean orderVoidByColumn(ParameterBean data, String columnName, String columnCriteria) {
 		return orderVoid(data, -1, columnName, columnCriteria);
 	}
 	
 	/**
-	 * Anula un pedido en borrador.  El mismo puede ser indicado por su ID, o por un par: Nombre de Columna / Criterio de Columna
-	 * 		La segunda manera de recuperar un pedido debe devolver solo un registro resultante, o se retornará un error
+	 * Anula uno o más pedido en borrador.  Los mismos pueden ser indicados por su ID, o por un par: Nombre de Columna / Criterio de Columna
+	 * 		Utilizando la segunda opción, en caso de recuperar más de un pedido se anularán todos.  En caso de error en alguno no se anulará ninguno.
 	 * @param data parametros correspondientes
 	 * @param orderID identificador del pedido (C_Order_ID)
-	 * @param columnName y columnCriteria columna y valor a filtrar para recuperar el pedido en cuestion
+	 * @param columnName y columnCriteria columna y valor a filtrar para recuperar el/los pedidos en cuestion
 	 * @return ResultBean con OK, ERROR, etc. 
 	 */
 	protected ResultBean orderVoid(ParameterBean data, int orderID, String columnName, String columnCriteria)
@@ -328,10 +329,16 @@ public class OrderDocumentHandler extends DocumentHandler {
 			/* === Configuracion inicial === */
 			init(data, new String[]{"orderID", "columnName", "columnCriteria"}, new Object[]{orderID, columnName, columnCriteria});
 
-			// Recuperar y anular el pedido
-			MOrder anOrder = (MOrder)getPO("C_Order", orderID, columnName, columnCriteria, true, false, true, true);
-			if (!DocumentEngine.processAndSave(anOrder, DocAction.ACTION_Void, false))
-				throw new ModelException("Error al anular el pedido:" + Msg.parseTranslation(getCtx(), anOrder.getProcessMsg()));
+			// Recuperar y anular pedidos
+			PO[] pos = getPOs("C_Order", orderID, columnName, columnCriteria, true, false, false, true);
+			for (PO po : pos) {
+				if (!DocumentEngine.processAndSave((DocAction)po, DocAction.ACTION_Void, false)) {
+					throw new ModelException("Error al anular el pedido:" + Msg.parseTranslation(getCtx(), ((DocAction)po).getProcessMsg()));
+				}
+			}
+			
+			/* === Commitear transaccion === */
+			Trx.getTrx(getTrxName()).commit();
 			
 			/* === Retornar valor === */
 			HashMap<String, String> result = new HashMap<String, String>();

@@ -882,6 +882,64 @@ public abstract class GeneralHandler {
 		}
 	}
 	
+	/**
+	 * Recupera un array de PO a partir de su ID (en este caso será de longitud 1) o bien indicando una columna y el valor que ésta debe tener
+	 * @param poID ID del PO (primera opcion de búsqueda)
+	 * @param columnName nombre de la columna por la cual buscar (segunda opción de búsqueda, primer parametro) 
+	 * @param columnValue criterio de busqueda sobre dicha columna (segunda opción de búsqueda, segundo parametro)
+	 * @param filterByOrg para la segunda opcion de busqueda, adiciona un filtrado por organizacion (si AD_Org_ID de login != 0)
+	 * @param filterByClient para la segunda opcion de busqueda, adiciona un filtrado por compañía (si AD_Client_ID de login != 0)  
+	 * @param oneResultOnly requiere que solo se obtenga un resultado
+	 * @param noResultThrowsException especifica si no se obtienen resultados: disparar una excepcion o no
+	 * @throws ModelException en caso de que la búsqueda devuelva más de un resultado (si oneResultOnly es true)
+	 * @throws ModelException en caso de que la búsqueda no devuelva resultados (si noResultThrowsExeption es true)
+	 * @return el PO ya instanciado o null en caso de no encontrarlo (si noResultThrowsExeption es false)
+	 */
+	public PO[] getPOs(String tableName, int poID, String columnName, String columnValue, boolean filterByOrg, boolean filterByClient, boolean oneResultOnly, boolean noResultThrowsException) throws ModelException
+	{
+		PO[] pos = null;
+		
+		// Recuperar la tabla indicada
+		M_Table table = M_Table.get(getCtx(), tableName);
+
+		PO aPO = null;
+		// Se busca por su ID?
+		if (poID > 0) {
+			aPO = table.getPO(poID, getTrxName());
+			pos = new PO[1];
+			pos[0] = aPO;
+		}
+		// Se busca por un par columnName/ColumnValue?
+		else if (columnName!=null && columnValue!=null && columnName.length()>0 && columnValue.length()>0)
+		{
+			int[] ids = null;
+			String filterQuery = columnName + " = '" + columnValue + "'";
+			// Si filterByOrg es true && orgID>0 => Si hay un org especificado en el login, se filtra por org.  
+			// Si filterByClient es true && clientID>0 => Si hay un client especificada en el login, se filtra por client.  
+			if (filterByOrg && Env.getAD_Org_ID(getCtx())>0)
+				filterQuery += " AND AD_Org_ID = " + Env.getAD_Org_ID(getCtx());
+			if (filterByClient && Env.getAD_Client_ID(getCtx())>0)
+				filterQuery += " AND AD_Client_ID = " + Env.getAD_Client_ID(getCtx());
+			ids = PO.getAllIDs(tableName, filterQuery, getTrxName());
+			// Se obtuvieron varios resultados?
+			if (ids!=null && ids.length>1 && oneResultOnly)
+				throw new ModelException("El criterio de busqueda retornó más de un resultado en tabla " + tableName + " con los criterios especificados");
+			// Procesar el resultado (si es que el mismo existe)
+			if (ids!=null && ids.length>0) {
+				int i=0;
+				pos = new PO[ids.length];
+				for (int id : ids) {
+					aPO = table.getPO(id, getTrxName());
+					pos[i++] = aPO;
+				}
+			}
+		}
+		// No se pudo obtener un objeto?
+		if ((pos == null || pos.length == 0 || pos[0].getID() == 0) && noResultThrowsException)
+			throw new ModelException("No se pudo recuperar un registro para la tabla " + tableName + " con los criterios especificados.");
+		// Retornar el objeto instanciado
+		return pos;
+	}
 	
 	/**
 	 * Recupera un PO a partir de su ID o bien indicando una columna y el valor que ésta debe tener
@@ -898,37 +956,8 @@ public abstract class GeneralHandler {
 	 */
 	public PO getPO(String tableName, int poID, String columnName, String columnValue, boolean filterByOrg, boolean filterByClient, boolean oneResultOnly, boolean noResultThrowsException) throws ModelException
 	{
-		// Recuperar la tabla indicada
-		M_Table table = M_Table.get(getCtx(), tableName);
-
-		PO aPO = null;
-		// Se busca por su ID?
-		if (poID > 0)
-			aPO = table.getPO(poID, getTrxName());
-		// Se busca por un par columnName/ColumnValue?
-		else if (columnName!=null && columnValue!=null && columnName.length()>0 && columnValue.length()>0)
-		{
-			int[] ids = null;
-			String filterQuery = columnName + " = '" + columnValue + "'";
-			// Si filterByOrg es true && orgID>0 => Si hay un org especificado en el login, se filtra por org.  
-			// Si filterByClient es true && clientID>0 => Si hay un client especificada en el login, se filtra por client.  
-			if (filterByOrg && Env.getAD_Org_ID(getCtx())>0)
-				filterQuery += " AND AD_Org_ID = " + Env.getAD_Org_ID(getCtx());
-			if (filterByClient && Env.getAD_Client_ID(getCtx())>0)
-				filterQuery += " AND AD_Client_ID = " + Env.getAD_Client_ID(getCtx());
-			ids = PO.getAllIDs(tableName, filterQuery, getTrxName());
-			// Se obtuvo solo un resultado?
-			if (ids!=null && ids.length==1)
-				aPO = table.getPO(ids[0], getTrxName());
-			// Se obtuvieron varios resultados?
-			if (ids!=null && ids.length>1 && oneResultOnly)
-				throw new ModelException("El criterio de busqueda retornó más de un resultado en tabla " + tableName + " con los criterios especificados");
-		}
-		// No se pudo obtener un objeto?
-		if ((aPO == null || aPO.getID() == 0) && noResultThrowsException)
-			throw new ModelException("No se pudo recuperar un registro para la tabla " + tableName + " con los criterios especificados.");
-		// Retornar el objeto instanciado
-		return aPO;
+		PO[] pos = getPOs(tableName, poID, columnName, columnValue, filterByOrg, filterByClient, oneResultOnly, noResultThrowsException);
+		return pos != null ? pos[0] : null; 
 	}
 
 	/**

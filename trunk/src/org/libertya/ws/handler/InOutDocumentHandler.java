@@ -10,6 +10,7 @@ import org.openXpertya.model.MBPartner;
 import org.openXpertya.model.MInOut;
 import org.openXpertya.model.MInOutLine;
 import org.openXpertya.model.MOrder;
+import org.openXpertya.model.PO;
 import org.openXpertya.model.X_C_Order;
 import org.openXpertya.process.DocAction;
 import org.openXpertya.process.DocumentEngine;
@@ -297,7 +298,7 @@ public class InOutDocumentHandler extends DocumentHandler {
 	
 	
 	/**
-	 * Anula un remito en borrador.  El mismo debe ser indicado por su ID
+	 * Anula un remito.  El mismo debe ser indicado por su ID
 	 * @param data parametros correspondientes
 	 * @param inOutID identificador del remito (M_InOut_ID)
 	 * @return ResultBean con OK o ERROR 
@@ -307,7 +308,7 @@ public class InOutDocumentHandler extends DocumentHandler {
 	}
 	
 	/**
-	 * Anula un remito en borrador.  El mismo debe ser indicado por un par: Nombre de Columna / Criterio de Columna
+	 * Anula remitos.  Indicados por un par: Nombre de Columna / Criterio de Columna
 	 * @param data parametros correspondientes
 	 * @param columnName y columnCriteria columna y valor a filtrar para recuperar el remito en cuestion
 	 * @return ResultBean con OK o ERROR 
@@ -318,11 +319,11 @@ public class InOutDocumentHandler extends DocumentHandler {
 
 	
 	/**
-	 * Anula un remito en borrador.  El mismo puede ser indicado por su ID, o por un par: Nombre de Columna / Criterio de Columna
-	 * 		La segunda manera de recuperar un remito debe devolver solo un registro resultante, o se retornará un error
+	 * Anula uno o más remitos.  Los mismos pueden ser indicados por su ID, o por un par: Nombre de Columna / Criterio de Columna
+	 * 		Utilizando la segunda opción, en caso de recuperar más de un remito se anularán todos.  En caso de error en alguno no se anulará ninguno.
 	 * @param data parametros correspondientes
 	 * @param inOutID identificador del remito (M_InOut_ID)
-	 * @param columnName y columnCriteria columna y valor a filtrar para recuperar el remito en cuestion
+	 * @param columnName y columnCriteria columna y valor a filtrar para recuperar el/los remitos en cuestion
 	 * @return ResultBean con OK, ERROR, etc. 
 	 */
 	protected ResultBean inOutVoid(ParameterBean data, int inOutID, String columnName, String columnCriteria)
@@ -332,10 +333,16 @@ public class InOutDocumentHandler extends DocumentHandler {
 			/* === Configuracion inicial === */
 			init(data, new String[]{"inOutID", "columnName", "columnCriteria"}, new Object[]{inOutID, columnName, columnCriteria});
 
-			// Recuperar y anular el remito
-			MInOut anInOut = (MInOut)getPO("M_InOut", inOutID, columnName, columnCriteria, true, false, true, true);
-			if (!DocumentEngine.processAndSave(anInOut, DocAction.ACTION_Void, false))
-				throw new ModelException("Error al anular el remito:" + Msg.parseTranslation(getCtx(), anInOut.getProcessMsg()));
+			// Recuperar y anular remitos
+			PO[] pos = getPOs("M_InOut", inOutID, columnName, columnCriteria, true, false, false, true);
+			for (PO po : pos) {
+				if (!DocumentEngine.processAndSave((DocAction)po, DocAction.ACTION_Void, false)) {
+					throw new ModelException("Error al anular el remito:" + Msg.parseTranslation(getCtx(), ((DocAction)po).getProcessMsg()));
+				}
+			}
+			
+			/* === Commitear transaccion === */
+			Trx.getTrx(getTrxName()).commit();
 			
 			/* === Retornar valor === */
 			HashMap<String, String> result = new HashMap<String, String>();

@@ -505,6 +505,12 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		return new SimpleResult(resultBean);
 	}	
 	
+	public synchronized SimpleResult allocationVoidByColumn(Login login, String columnName, String columnCriteria, String allocationAction) {
+		AllocationParameterBean bean = new AllocationParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
+		ResultBean resultBean = new AllocationDocumentHandler().allocationVoidByColumn(bean, columnName, columnCriteria, allocationAction);
+		return new SimpleResult(resultBean);
+	}
+	
 	/* ================================================================== */
 	/* =========================== Usuarios ============================= */
 	/* ================================================================== */
@@ -658,6 +664,12 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		return new SimpleResult(resultBean);
 	}
 	
+	public synchronized SimpleResult productionOrderVoidByColumn(Login login, String columnName, String columnCriteria) {
+		DocumentParameterBean bean = new DocumentParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
+		ResultBean resultBean = new ProductionOrderDocumentHandler().productionOrderVoidByColumn(bean, columnName, columnCriteria);
+		return new SimpleResult(resultBean);
+	}
+	
 	/* ================================================================== */
 	/* ====================== Boletas de depósito ======================= */
 	/* ================================================================== */
@@ -685,6 +697,13 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		ResultBean resultBean = new DepositSlipDocumentHandler().depositSlipVoid(bean, depositSlipID);
 		return new SimpleResult(resultBean);		
 	}
+
+	public synchronized SimpleResult depositSlipVoidByColumn(Login login, String columnName, String columnCriteria) {
+		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
+		ResultBean resultBean = new DepositSlipDocumentHandler().depositSlipVoidByColumn(bean, columnName, columnCriteria);
+		return new SimpleResult(resultBean);	
+	}
+
 
 	/* ================================================================== */
 	/* ====================== Lista de materiales ======================= */
@@ -718,9 +737,5 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		return new MultipleRecordsResult(resultBean);
 	}
 
-
-
-
-	
 
 }

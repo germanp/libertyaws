@@ -15,6 +15,8 @@ import org.openXpertya.model.MInvoiceLine;
 import org.openXpertya.model.MInvoiceTax;
 import org.openXpertya.model.MOrder;
 import org.openXpertya.model.MOrderLine;
+import org.openXpertya.model.PO;
+import org.openXpertya.model.X_C_Invoice;
 import org.openXpertya.process.DocAction;
 import org.openXpertya.process.DocumentEngine;
 import org.openXpertya.util.CLogger;
@@ -447,17 +449,15 @@ public class InvoiceDocumentHandler extends DocumentHandler {
 	}
 	
 	
-	
-	
 	/**
-	 * Anula una factura en borrador, la cual es indicada por su ID
+	 * Anula una factura, la cual es indicada por su ID
 	 */
 	public ResultBean invoiceVoidByID(ParameterBean data, int invoiceID) {
 		return invoiceVoid(data, invoiceID, null, null);
 	}
 	
 	/**
-	 * Anula una factura en borrador, la cual es indicada por una columna
+	 * Anula facturas, indicadas por una columna
 	 */
 	public ResultBean invoiceVoidByColumn(ParameterBean data, String columnName, String columnCriteria) {
 		return invoiceVoid(data, -1, columnName, columnCriteria);
@@ -465,12 +465,14 @@ public class InvoiceDocumentHandler extends DocumentHandler {
 	
 	
 	/**
-	 * Anula una factura en borrador.  La misma puede ser indicada por su ID, o por un par: Nombre de Columna / Criterio de Columna
-	 * 		La segunda manera de recuperar una factura debe devolver solo un registro resultante, o se retornará un error
+	 * Anula una o más facturas.  Las mismas pueden ser indicada por su ID, o por un par: Nombre de Columna / Criterio de Columna
+	 * 		Utilizando la segunda opción, en caso de recuperar más de una factura se anularán todas.  En caso de error en alguna no se anulará ninguna.
 	 * @param data parametros correspondientes
 	 * @param invoiceID identificador de la factura (C_Invoice_ID)
-	 * @param columnName y columnCriteria columna y valor a filtrar para recuperar la factura en cuestion
+	 * @param columnName y columnCriteria columna y valor a filtrar para recuperar la/s factura/s en cuestion
 	 * @return ResultBean con OK, ERROR, etc. 
+	 * 			En el resultado se incluye la clave CreditNote_DocumentNo, en donde se cuarda el número de documento de la nota de crédito eventualmente creada
+	 * 			Si se está anulando más de una factura, se crearán las claves Credit_DocumentNo_For_InvoiceID_XXX  (donde XXX es el número de factura)
 	 */
 	protected ResultBean invoiceVoid(ParameterBean data, int invoiceID, String columnName, String columnCriteria)
 	{
@@ -479,21 +481,29 @@ public class InvoiceDocumentHandler extends DocumentHandler {
 			/* === Configuracion inicial === */
 			init(data, new String[]{"invoiceID", "columnName", "columnCriteria"}, new Object[]{invoiceID, columnName, columnCriteria});
 
-			// Recuperar y anular la factura 
-			MInvoice anInvoice = (MInvoice)getPO("C_Invoice", invoiceID, columnName, columnCriteria, true, false, true, true);
-			if (!DocumentEngine.processAndSave(anInvoice, DocAction.ACTION_Void, false))
-				throw new ModelException("Error al anular la factura:" + Msg.parseTranslation(getCtx(), anInvoice.getProcessMsg()));
-			
-			/* === Retornar valor === */
+			/* === Valores de retorno === */
 			HashMap<String, String> result = new HashMap<String, String>();
-			// Buscar el CreditNote_DocumentNo en el anular
-			if (anInvoice.getRef_Invoice_ID()>0)
-			{	
-				MInvoice reversal = new MInvoice(getCtx(), anInvoice.getRef_Invoice_ID(), getTrxName());
-				result.put("CreditNote_DocumentNo", reversal.getDocumentNo());
+			
+			// Recuperar y anular la factura 
+			PO[] pos = getPOs("C_Invoice", invoiceID, columnName, columnCriteria, true, false, false, true);
+			for (PO po : pos) {
+				if (!DocumentEngine.processAndSave((DocAction)po, DocAction.ACTION_Void, false)) {
+					throw new ModelException("Error al anular la factura:" + Msg.parseTranslation(getCtx(), ((DocAction)po).getProcessMsg()));
+				}
+				// Buscar el CreditNote_DocumentNo en el anular
+				String key = "CreditNote_DocumentNo" + (pos.length == 1 ? "" : "_For_InvoiceID_" + ((X_C_Invoice)po).getC_Invoice_ID());
+				if (((X_C_Invoice)po).getRef_Invoice_ID()>0) {	
+					MInvoice reversal = new MInvoice(getCtx(), ((X_C_Invoice)po).getRef_Invoice_ID(), getTrxName());
+					result.put(key, reversal.getDocumentNo());
+				}
+				else
+					result.put(key, ((DocAction)po).getProcessMsg());							
 			}
-			else
-				result.put("CreditNote_DocumentNo", anInvoice.getProcessMsg());
+						
+			/* === Commitear transaccion === */
+			Trx.getTrx(getTrxName()).commit();
+			
+			/* === Retornar valores === */
 			return new ResultBean(false, null, result);
 
 		}

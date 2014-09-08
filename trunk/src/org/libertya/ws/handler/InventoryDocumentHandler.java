@@ -8,6 +8,7 @@ import org.libertya.ws.bean.result.ResultBean;
 import org.libertya.ws.exception.ModelException;
 import org.openXpertya.model.MInventory;
 import org.openXpertya.model.MInventoryLine;
+import org.openXpertya.model.PO;
 import org.openXpertya.process.DocAction;
 import org.openXpertya.process.DocumentEngine;
 import org.openXpertya.util.CLogger;
@@ -207,7 +208,8 @@ public class InventoryDocumentHandler extends GeneralHandler {
 	}
 	
 	/**
-	 * Anulacion de inventario 
+	 * Anulacion de inventario
+	 * En caso de recuperar más de un remito se anularán todos.  En caso de error en alguno no se anulará ninguno. 
 	 */
 	protected ResultBean inventoryVoid(ParameterBean data, int inventoryID, String columnName, String value) {
 		try
@@ -216,9 +218,15 @@ public class InventoryDocumentHandler extends GeneralHandler {
 			init(data, new String[]{"inventoryID", "columnName", "value"}, new Object[]{inventoryID, columnName, value});
 
 			// Recuperar y anular el inventario
-			MInventory anInventory = (MInventory)getPO("M_Inventory", inventoryID, columnName, value, true, false, true, true);
-			if (!DocumentEngine.processAndSave(anInventory, DocAction.ACTION_Void, false))
-				throw new ModelException("Error al anular el inventario:" + Msg.parseTranslation(getCtx(), anInventory.getProcessMsg()));
+			PO[] pos = getPOs("M_Inventory", inventoryID, columnName, value, true, false, false, true);
+			for (PO po : pos) {
+				if (!DocumentEngine.processAndSave((DocAction)po, DocAction.ACTION_Void, false)) {
+					throw new ModelException("Error al anular el inventario:" + Msg.parseTranslation(getCtx(), ((DocAction)po).getProcessMsg()));
+				}
+			}
+			
+			/* === Commitear transaccion === */
+			Trx.getTrx(getTrxName()).commit();
 			
 			/* === Retornar valor === */
 			HashMap<String, String> result = new HashMap<String, String>();

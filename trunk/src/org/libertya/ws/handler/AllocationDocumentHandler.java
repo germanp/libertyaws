@@ -21,9 +21,11 @@ import org.openXpertya.model.MEntidadFinancieraPlan;
 import org.openXpertya.model.MInvoice;
 import org.openXpertya.model.MPOSPaymentMedium;
 import org.openXpertya.model.MPayment;
+import org.openXpertya.model.PO;
 import org.openXpertya.model.POCRGenerator;
 import org.openXpertya.model.POCRGenerator.POCRType;
 import org.openXpertya.model.RetencionProcessor;
+import org.openXpertya.model.X_C_AllocationHdr;
 import org.openXpertya.process.DocAction;
 import org.openXpertya.process.DocumentEngine;
 import org.openXpertya.process.GeneratorRetenciones;
@@ -156,6 +158,19 @@ public class AllocationDocumentHandler extends GeneralHandler {
 		}
 	}
 	
+	/**
+	 * Anula recibos, indicado por columna y criterio de busqueda 
+	 */
+	public ResultBean allocationVoidByColumn(AllocationParameterBean data, String columnName, String columnCriteria, String allocationAction) {
+		return allocationVoid(data, -1, columnName, columnCriteria, allocationAction);
+	}
+
+	/**
+	 * Anula un recibo, indicado por su ID
+	 */
+	public ResultBean allocationVoidByID(AllocationParameterBean data, int allocationID, String allocationAction) {
+		return allocationVoid(data, allocationID, null, null, allocationAction);
+	}
 	
 	/**
 	 * Realiza la anulación de un Recibo emitido previamente
@@ -166,19 +181,22 @@ public class AllocationDocumentHandler extends GeneralHandler {
 	 *		Revertir y Anular Cobros y Retenciones <code>ALLOCATIONACTION_VoidPaymentsRetentions</code>. 
 	 * @return ResultBean con OK o ERROR. 
 	 */
-	public ResultBean allocationVoidByID(AllocationParameterBean data, int allocationID, String allocationAction) {
+	protected ResultBean allocationVoid(AllocationParameterBean data, int allocationID, String columnName, String columnCriteria, String allocationAction) {
 		try
 		{
 			/* === Configuracion inicial === */
-			init(data, new String[]{"allocationID", "allocationAction"}, new Object[]{allocationID, allocationAction});
+			init(data, new String[]{"allocationID", "columnName", "columnCriteria", "allocationAction"}, new Object[]{allocationID, columnName, columnCriteria, allocationAction});
 			
 			/* === Procesar (logica especifica) === */
-			// Setear el tipo de anulacion
-			MAllocationHdr allocationHdr = (MAllocationHdr)getPO("C_AllocationHdr", allocationID, null, null, false, false, true, true);
-			allocationHdr.setAllocationAction(allocationAction);
-			// Revertir y efectuar acciones adicionales según el tipo de anulación
-			if (!DocumentEngine.processAndSave(allocationHdr, DocAction.ACTION_Void, true))
-				throw new ModelException("Error al revertir el recibo: " + Msg.parseTranslation(getCtx(), allocationHdr.getProcessMsg()));
+			PO[] pos = getPOs("C_AllocationHdr", allocationID, columnName, columnCriteria, false, false, false, true);
+			for (PO po : pos) {
+				// Setear el tipo de anulacion
+				((X_C_AllocationHdr)po).setAllocationAction(allocationAction);
+				// Revertir y efectuar acciones adicionales según el tipo de anulación
+				if (!DocumentEngine.processAndSave((DocAction)po, DocAction.ACTION_Void, true)) {
+					throw new ModelException("Error al revertir el recibo: " + Msg.parseTranslation(getCtx(), ((DocAction)po).getProcessMsg()));
+				}
+			}
 			
 			/* === Commitear transaccion === */
 			Trx.getTrx(getTrxName()).commit();

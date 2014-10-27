@@ -41,7 +41,7 @@ public class ReplicationServerHandler extends GeneralHandler {
 			
         	// ...Procesar el XML recibido y actualizar el repArray
 			int sourceOrgID = MReplicationHost.getReplicationOrgForPosition(data.getSourceHostPos(), getTrxName());
-        	ReplicationXMLUpdater replicationXMLUpdater = new ReplicationXMLUpdater("<?xml version=\"1.0\" encoding=\"UTF-8\"?> <root> " + contentXML + " </root> ", getTrxName(), sourceOrgID);
+        	ReplicationXMLUpdater replicationXMLUpdater = new ReplicationXMLUpdater("<?xml version=\"1.0\" encoding=\"UTF-8\"?> <root> " + contentXML + " </root> ", getTrxName(), sourceOrgID, thisHostPos);
             replicationXMLUpdater.processChangeLog();
 			
 			/* === Commitear transaccion === */ 

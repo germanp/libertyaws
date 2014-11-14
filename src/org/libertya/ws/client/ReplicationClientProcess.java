@@ -1,6 +1,7 @@
 package org.libertya.ws.client;
 
 import java.rmi.RemoteException;
+import java.util.HashSet;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -414,12 +415,15 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 	static final String PARAM_MAX_RECORDS 			=	"-l";
 	// Parametro envio de mail al tener un cantidad de registros pendiente de replicacion mayor a la indicada
 	static final String PARAM_WARNING_LIMIT 		=	"-w";
+	// Parametro para omitir utilizacion de filtros en esta ejecucion  
+	static final String PARAM_SKIP_FILTERS			=	"-s";
 	// Parametro solo envio tabla indicada
 	static final String PARAM_REPLICATE_TABLE 		=	"-rt";
 	// Parametro solo envio registro indicado
 	static final String PARAM_REPLICATE_RECORD 		=	"-rr";
-	// Parametro solo envio a host indicado 
+	// Parametro solo envio a host/s indicado/s (separado por comas)
 	static final String PARAM_REPLICATE_HOST 		=	"-rh";
+
 
 
 	public static void main(String args[])
@@ -453,10 +457,16 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 					ReplicationTableManager.invalidateCache();
 					cacheInvalidated = true;
 				}
-				ReplicationTableManager.filterHost = Integer.parseInt(arg.substring(PARAM_REPLICATE_HOST.length()));
+				ReplicationTableManager.filterHost = new HashSet<Integer>();
+				String[] hosts = arg.substring(PARAM_REPLICATE_HOST.length()).split(",");
+				for (String host : hosts)
+					ReplicationTableManager.filterHost.add(Integer.parseInt(host));
 			}
 			else if (arg.toLowerCase().startsWith(PARAM_WARNING_LIMIT)) {
 				ReplicationConstantsWS.WARNING_LIMIT = Integer.parseInt(arg.substring(PARAM_WARNING_LIMIT.length()));
+			}
+			else if (arg.toLowerCase().startsWith(PARAM_SKIP_FILTERS)) {
+				ReplicationConstantsWS.SKIP_FILTERS = true;
 			}
 		}
 		
@@ -496,15 +506,16 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 				"\n" + 	
 				" ------------ FRAMEWORK DE REPLICACION VIA WS. MODO DE INSTANCIACION DEL PROCESO CLIENTE --------------- " +
 				" Ejemplos de uso de proceso origen (caso tipico de uso y parametros completos): \n" +
-				" java -classpath ../../lib/OXP.jar:../../lib/OXPLib.jar:../../lib/OXPXLib.jar:lib/repClient.jar:lib/lyws.jar org.libertya.ws.client.ReplicationClientProcess " + PARAM_EVENTS_PER_CALL + "500 " + PARAM_TIMEOUT_BASE + "120000 " + PARAM_MAX_RECORDS + "1500 " + PARAM_REPLICATE_TABLE + "C_Invoice " + PARAM_REPLICATE_RECORD + "h1_1394_C_Invoice " + PARAM_REPLICATE_HOST + "2 \n" +
+				" java -classpath ../../lib/OXP.jar:../../lib/OXPLib.jar:../../lib/OXPXLib.jar:lib/repClient.jar:lib/lyws.jar org.libertya.ws.client.ReplicationClientProcess " + PARAM_EVENTS_PER_CALL + "500 " + PARAM_TIMEOUT_BASE + "120000 " + PARAM_MAX_RECORDS + "1500 " + PARAM_REPLICATE_TABLE + "C_Invoice " + PARAM_REPLICATE_RECORD + "h1_1394_C_Invoice " + PARAM_REPLICATE_HOST + "2,5 \n" +
 				" donde \n" +
 				" " + PARAM_EVENTS_PER_CALL  + "    es la cantidad de eventos que se envian en una misma llamada al WS. Si no se especifica, el valor por defecto es " + ReplicationConstantsWS.EVENTS_PER_CALL + ".  Si la cantidad de registros es mayor que este valor, se realizarán varias llamadas independientes (en distintas transacciones). \n" +
 				" " + PARAM_TIMEOUT_BASE     + "    redefinicion del timeout base para la invocación al WS (milisegundos). Si no se especifica, el valor por defecto es " + ReplicationConstantsWS.TIME_OUT_BASE + ". A este valor se le adiciona el parametro "+PARAM_EVENTS_PER_CALL+" * " + ReplicationConstantsWS.TIME_OUT_EXTRA_FACTOR + " \n" +
 				" " + PARAM_MAX_RECORDS      + "    especifica el numero maximo de registros a procesar para su envio a los demas hosts (0 = todos) \n" +
 				" " + PARAM_WARNING_LIMIT    + "    envio de warning por mail al tener una cantidad de registros pendientes a replicar mayor al valor indicado.  Valor por defecto: " + ReplicationConstantsWS.WARNING_LIMIT + ". El mail sera enviado a la direccion especificada en AD_Preference, atributo: ReplicationAdmin. La cuenta origen se configura en AD_Client \n" +
+				" " + PARAM_SKIP_FILTERS     + "    saltear (no aplicar) los filtros de replicacion en esta ejecucion \n" +
 				" " + PARAM_REPLICATE_TABLE  + "    limita la replicación unicamente a la tabla especificada \n" +
 				" " + PARAM_REPLICATE_RECORD + "    limita la replicación unicamente al registro especificado por su retrieveUID (ver parametro de filtro por tabla) \n" +
-				" " + PARAM_REPLICATE_HOST   + "    limita la replicación unicamente hacia el host especificado por su replicationPos (ver parametro de filtro por tabla) \n" +
+				" " + PARAM_REPLICATE_HOST   + "    limita la replicación unicamente hacia el host especificado por su replicationPos (es posible indicar más de un host destino separado por comas) \n" +
 				" ------------ IMPORTANTE: NO DEBEN DEJARSE ESPACIOS ENTRE EL PARAMETRO Y EL VALOR DEL PARAMETRO! --------------- \n";
 		System.out.println(help);
 		System.exit(1);

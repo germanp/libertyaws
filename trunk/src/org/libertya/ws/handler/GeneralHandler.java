@@ -15,8 +15,6 @@ import java.util.Properties;
 import org.libertya.ws.bean.parameter.ParameterBean;
 import org.libertya.ws.bean.result.ResultBean;
 import org.libertya.ws.exception.ModelException;
-import org.libertya.ws.utils.LYWSContextProvider;
-import org.libertya.ws.utils.LYWSServerContext;
 import org.openXpertya.OpenXpertya;
 import org.openXpertya.model.MUser;
 import org.openXpertya.model.M_Column;
@@ -86,10 +84,17 @@ public abstract class GeneralHandler {
 		
 		// Guardar userName para uso en logger
 		userName = data.getUserName();
-		
-        // Inicializar contexto para el thread actual (a fin de evitar problemas de concurrencia del contexto)
-        LYWSServerContext.newInstance();
-        Env.setContextProvider(new LYWSContextProvider());
+
+// Comentado: 	Por algún motivo la gestión de contexto independiente por thread para LYWS colisiona con la de LYWeb, generando
+//				un problema en esta última al utilizar ambas aplicaciones: las distintas sesiones en LYWeb se mezclan. Dado que
+//				por el momento las operaciones LYWS son synchronized, quitar dicha gestión no presenta problema de ejecución en
+//				lo que refiere a consistencia de datos.  TODO: determinar el motivo por el cual ocurre el mencionado conflicto.
+// Update: 		A fin de aislar los contextos (LYWeb, LYWS, Server Tasks), se embeben en cada aplicación las librerías Libertya
+//				que originalmente eran compartidas por todas la aplicaciones web, tal como OXP.jar y OXPSLib.jar. De esta forma
+//				se aisla el contexto para cada aplicación, y por lo tanto sin la necesidad de gestión inpendiente del contexto. 
+//      // Inicializar contexto para el thread actual (a fin de evitar problemas de concurrencia del contexto)
+//		LYWSServerContext.newInstance();
+//		Env.setContextProvider(new LYWSContextProvider());
 		
 		// Iniciar el entorno
 		setClientOrg(data.getClientID(), data.getOrgID());
@@ -191,7 +196,7 @@ public abstract class GeneralHandler {
 	  	
 	  	// Cargar el entorno basico
 	  	System.setProperty(ENV_OXP_HOME, oxpHomeDir);
-	  	if (!OpenXpertya.startupEnvironment( false ))
+	  	if (!OpenXpertya.startup( false ))
 	  		throw new Exception ("Error al iniciar entorno (Hay conexión a Base de Datos?) ");	
 	}
 	

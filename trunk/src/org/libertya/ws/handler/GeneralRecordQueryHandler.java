@@ -32,8 +32,9 @@ public class GeneralRecordQueryHandler extends GeneralHandler {
 			
 			/* === Procesar (logica especifica) === */
 			// Verificar que no sea la tabla de usuarios
-			if (X_AD_User.Table_Name.equalsIgnoreCase(tableName))
-				throw new ModelException("Tabla invalida para este servicio");
+// Se omite la restricción
+//			if (X_AD_User.Table_Name.equalsIgnoreCase(tableName))
+//				throw new ModelException("Tabla invalida para este servicio");
 			
 			// Verificar que haya especificado un nombre de tabla
 			if (tableName == null || tableName.length()==0)

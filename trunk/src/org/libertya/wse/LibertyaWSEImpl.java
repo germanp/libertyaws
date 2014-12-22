@@ -28,6 +28,7 @@ import org.libertya.ws.handler.InOutDocumentHandler;
 import org.libertya.ws.handler.InventoryDocumentHandler;
 import org.libertya.ws.handler.InvoiceDocumentHandler;
 import org.libertya.ws.handler.OrderDocumentHandler;
+import org.libertya.ws.handler.ProcessExecuteHandler;
 import org.libertya.ws.handler.ProductCRUDHandler;
 import org.libertya.ws.handler.ProductPriceCRUDHandler;
 import org.libertya.ws.handler.ProductionOrderDocumentHandler;
@@ -719,6 +720,22 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
 		ResultBean resultBean = new BillOfMaterialCRUDHandler().billOfMaterialDelete(bean, productBOMId);
 		return new SimpleResult(resultBean);
+	}
+	
+	/* ================================================================== */
+	/* ========================== Procesos ============================== */
+	/* ================================================================== */
+	
+	public SimpleResult processFiscalPrinterClose(Login login, SimpleMap[] arguments) {
+		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), arguments);
+		ResultBean resultBean = new ProcessExecuteHandler().processFiscalPrinterClose(bean);
+		return new SimpleResult(resultBean);
+	}
+
+	public SimpleResult processCreditCardBatchClose(Login login, SimpleMap[] arguments) {
+		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), arguments);
+		ResultBean resultBean = new ProcessExecuteHandler().processCreditCardBatchClose(bean);
+		return new SimpleResult(resultBean);		
 	}
 	
 	/* ================================================================== */

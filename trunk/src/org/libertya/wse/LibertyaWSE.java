@@ -1,7 +1,5 @@
 package org.libertya.wse;
 
-import org.libertya.ws.bean.parameter.DocumentParameterBean;
-import org.libertya.ws.bean.result.ResultBean;
 import org.libertya.wse.common.ListedMap;
 import org.libertya.wse.common.RecordContent;
 import org.libertya.wse.common.SimpleMap;
@@ -591,6 +589,20 @@ public interface LibertyaWSE {
 	 * Wrapper para <code>billOfMaterialDelete(ParameterBean data, int productBOMId)</code> 
 	 */
 	public SimpleResult billOfMaterialDelete(Login login, int productBOMId);
+
+	/* ================================================================== */
+	/* ========================== Procesos ============================== */
+	/* ================================================================== */
+	
+	/**
+	 * Wrapper para processFiscalPrinterClose(ParameterBean data)<code></code>
+	 */
+	public SimpleResult processFiscalPrinterClose(Login login, SimpleMap[] arguments);
+	
+	/**
+	 * Wrapper para processCreditCardBatchClose(ParameterBean data)<code></code>
+	 */
+	public SimpleResult processCreditCardBatchClose(Login login, SimpleMap[] arguments);
 	
 	/* ================================================================== */
 	/* ==================== Funciones de uso general ==================== */

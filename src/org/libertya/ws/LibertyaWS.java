@@ -1130,7 +1130,33 @@ public interface LibertyaWS {
 	 * @return ResultBean OK o ERROR en caso de error.  
 	 */
 	public ResultBean billOfMaterialDelete(ParameterBean data, int productBOMId);
+
+	/* ================================================================== */
+	/* ========================== Procesos ============================== */
+	/* ================================================================== */
 	
+	/**
+	 * Cierre de impresora fiscal.
+	 * Requiere especificar los siguientes argumentos: <br>
+	 * 		- FiscalCloseType (String ("X" o "Z") / obligatorio)
+	 * 		- C_Controlador_Fiscal_ID (entero / obligatorio)
+	 * @param data datos de acceso y argumentos. Se utiliza la map de mainTable para especificar 
+	 * los argumentos del proceso, a fin de lograr versatilidad en caso de tener que incorporar nuevos parametros.
+	 * @return ResultBean con OK o ERROR en caso de error
+	 */
+	public ResultBean processFiscalPrinterClose(ParameterBean data);
+	
+	/**
+	 * Cierre de lote de Tarjeta de Credito <br>
+	 * Requiere especificar los siguientes argumentos: <br> 
+	 * 		- CouponBatchNumber (entero / obligatorio), <br> 
+	 * 		- M_EntidadFinanciera_ID (entero / obligatorio), <br>
+	 * 		- AD_Org_ID (entero / opcional)
+	 * @param data datos de acceso y argumentos. Se utiliza la map de mainTable para especificar 
+	 * los argumentos del proceso, a fin de lograr versatilidad en caso de tener que incorporar nuevos parametros.
+	 * @return ResultBean con OK o ERROR en caso de error
+	 */
+	public ResultBean processCreditCardBatchClose(ParameterBean data);
 	
 	/* ================================================================== */
 	/* ========================= Replicación ============================ */

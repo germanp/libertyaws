@@ -31,6 +31,7 @@ import org.libertya.ws.handler.InOutDocumentHandler;
 import org.libertya.ws.handler.InventoryDocumentHandler;
 import org.libertya.ws.handler.InvoiceDocumentHandler;
 import org.libertya.ws.handler.OrderDocumentHandler;
+import org.libertya.ws.handler.ProcessExecuteHandler;
 import org.libertya.ws.handler.ProductCRUDHandler;
 import org.libertya.ws.handler.ProductPriceCRUDHandler;
 import org.libertya.ws.handler.ProductionOrderDocumentHandler;
@@ -519,6 +520,19 @@ public class LibertyaWSImpl implements LibertyaWS {
 		return new BillOfMaterialCRUDHandler().billOfMaterialDelete(data, productBOMId);
 	}
 
+	/* ================================================================== */
+	/* ========================== Procesos ============================== */
+	/* ================================================================== */
+
+	public ResultBean processFiscalPrinterClose(ParameterBean data) {
+		return new ProcessExecuteHandler().processFiscalPrinterClose(data);
+	}
+
+	public ResultBean processCreditCardBatchClose(ParameterBean data) {
+		return new ProcessExecuteHandler().processCreditCardBatchClose(data);
+	}
+	
+	
 	/* ================================================================== */
 	/* ========================= Replicación ============================ */
 	/* ================================================================== */

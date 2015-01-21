@@ -528,6 +528,12 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		return new SimpleResult(resultBean);
 	}
 
+	public synchronized SimpleResult userRetrieveByColumn(Login login, String columnName, String criteria) {
+		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
+		ResultBean resultBean = new UserCRUDHandler().userRetrieveByColumn(bean, columnName, criteria);
+		return new SimpleResult(resultBean);
+	}
+
 	public synchronized SimpleResult userUpdateByID(Login login, SimpleMap[] data, int userID) {
 		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
 		ResultBean resultBean = new UserCRUDHandler().userUpdateByID(bean, userID);

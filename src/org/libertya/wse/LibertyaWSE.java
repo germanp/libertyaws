@@ -425,6 +425,11 @@ public interface LibertyaWSE {
 	public SimpleResult userRetrieveByID(Login login, int userID);
 	
 	/**
+	 * Wrapper para <code>userRetrieveByColumn(ParameterBean data, String columnName, String criteria)</code>
+	 */
+	public SimpleResult userRetrieveByColumn(Login login, String columnName, String criteria);
+	
+	/**
 	 * Wrapper para <code>userUpdateByID(ParameterBean data, int userID)</code>
 	 */
 	public SimpleResult userUpdateByID(Login login, SimpleMap[] data, int userID);

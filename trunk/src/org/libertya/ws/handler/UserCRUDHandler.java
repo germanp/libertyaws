@@ -48,15 +48,37 @@ public class UserCRUDHandler extends GeneralHandler {
 		}
 	}
 	
+	/**
+	 * Recupera un usuario
+	 * @param data parametros correspondientes
+	 * @param userID si se desea recuperar por este criterio debe ser valor mayor a cero
+	 * @return ResultBean con los datos correspondientes
+	 */
+	public ResultBean userRetrieveByID(ParameterBean data, int userID) {
+		return userRetrieve(data, userID, null, null);
+	}
+	
+	/**
+	 * Recupera un usuario
+	 * @param data parametros correspondientes
+	 * @param columnName si se desea recuperar por este criterio, debse ser distinto de null, en conjunto con criteria
+	 * @param criteria si se desea recuperar por este criterio, debse ser distinto de null, en conjunto con columnName
+	 * @return ResultBean con los datos correspondientes
+	 */
+	public ResultBean userRetrieveByColumn(ParameterBean data, String columnName, String criteria) {
+		return userRetrieve(data, -1, columnName, criteria);
+	}
+	
 	
 	/**
 	 * Recupera un usuario
 	 * @param data parametros correspondientes
 	 * @param userID si se desea recuperar por este criterio debe ser valor mayor a cero (o -1 en CC)
-	 * @param name si se desea recuperar por este criterio debse ser distinto de null (o null en cc)
+	 * @param columnName si se desea recuperar por este criterio debse ser distinto de null (o null en cc), en conjunto con criteria
+	 * @param criteria si se desea recuperar por este criterio debse ser distinto de null (o null en cc), en conjunto con columnName
 	 * @return ResultBean con los datos correspondientes
 	 */
-	public ResultBean userRetrieveByID(ParameterBean data, int userID)
+	protected ResultBean userRetrieve(ParameterBean data, int userID, String columnName, String criteria)
 	{
 		try
 		{	
@@ -64,9 +86,9 @@ public class UserCRUDHandler extends GeneralHandler {
 			init(data, new String[]{"userID"}, new Object[]{userID});
 			
 			/* === Procesar (logica especifica) === */
-			// Recuperar el articulo (si existe) por algún criterio. 
+			// Recuperar el usuario (si existe) por algún criterio. 
 			// 1) Buscar por ID o por value (obtener null si no se encuentra)
-			MUser aUser = (MUser)getPO("AD_User", userID, null, null, false, true, true, false);
+			MUser aUser = (MUser)getPO("AD_User", userID, columnName, criteria, false, false, true, false);
 			if (aUser == null || aUser.getAD_User_ID()==0)
 				throw new ModelException("No se ha podido recuperar un usuario a partir de los parametros indicados");
 

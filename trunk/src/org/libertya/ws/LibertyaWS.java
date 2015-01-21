@@ -839,6 +839,15 @@ public interface LibertyaWS {
 	 * @return ResultBean con los datos correspondientes
 	 */
 	public ResultBean userRetrieveByID(ParameterBean data, int userID);
+
+	/**
+	 * Recupera un usuario a partir del nombre de una columna y un criterio de búsqueda
+	 * @param data parametros correspondientes
+	 * @param columnName columna sobre la cual buscar el usuario
+	 * @param criteria valor a buscar en la columna indicada
+	 * @return ResultBean con los datos correspondientes
+	 */
+	public ResultBean userRetrieveByColumn(ParameterBean data, String columnName, String criteria);
 	
 	/**
 	 * Actualización de un usuario a partir de su ID

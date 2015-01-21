@@ -376,6 +376,10 @@ public class LibertyaWSImpl implements LibertyaWS {
 		return new UserCRUDHandler().userRetrieveByID(data, userID);
 	}
 
+	public synchronized ResultBean userRetrieveByColumn(ParameterBean data, String columnName, String criteria) {
+		return new UserCRUDHandler().userRetrieveByColumn(data, columnName, criteria);
+	}
+
 	public synchronized ResultBean userUpdateByID(ParameterBean data, int userID) {
 		return new UserCRUDHandler().userUpdateByID(data, userID);
 	}

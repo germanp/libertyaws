@@ -83,7 +83,7 @@ public class UserCRUDHandler extends GeneralHandler {
 		try
 		{	
 			/* === Configuracion inicial === */
-			init(data, new String[]{"userID"}, new Object[]{userID});
+			init(data, new String[]{"userID", "columnName", "criteria"}, new Object[]{userID, columnName, criteria});
 			
 			/* === Procesar (logica especifica) === */
 			// Recuperar el usuario (si existe) por algún criterio. 

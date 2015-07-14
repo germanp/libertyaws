@@ -1,6 +1,7 @@
 package org.libertya.ws.client;
 
 import java.rmi.RemoteException;
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -35,6 +36,9 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 	/** Discriminacion entre proceso cliente y servicio WS */
 	public static final String CLIENT_PROCESS = "[WSCLIENT] ";
 
+	/** Instante de inicio del procesamiento */
+	public static Timestamp startingTime = null;
+	
 	@Override
 	protected String doIt() throws Exception {
 		try
@@ -43,6 +47,9 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 			if (thisOrgID == -1)
 				throw new Exception (" Sin marca de host.  Debe realizar la configuración correspondiente en la ventana Hosts de Replicación ");
 
+			// Iniciar la marca de tiempo
+			startingTime = Env.getTimestamp();
+			
 			// Verificar si hay que enviar un mail de aviso por acumulacion de registros pendientes a replicar
 			checkForWarning();
 			
@@ -244,6 +251,14 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 						sql.append(" 1=2 )");
 						requiresResend = (1 == DB.getSQLValue(trxName, sql.toString()));
 					}
+					// Fue el registro modificado durante el intervalo de tiempo en que demoró replicación (si es una eliminación no es necesario)?
+					// En ese caso es necesario reenviar el registro con la modificación realizada
+					if (!MChangeLog.OPERATIONTYPE_Deletion.equals(opType)) {
+						Timestamp updated = DB.getSQLValueTimestamp(trxName, "SELECT updated FROM " + tablename + " WHERE retrieveUID = '" + uid + "'", true);
+						if (startingTime.compareTo(updated) < 0)
+							requiresResend = true;
+					}
+					
 					// Actualizar el repArray en función del OK recibido
 					if (requiresResend)
 						repArrayUpdateQuery(repArrayPos, tablename, uid, currentRepArray, currentStatus, ReplicationConstants.REPARRAY_REPLICATE_MODIFICATION, trxName, opType);

@@ -438,7 +438,8 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 	static final String PARAM_REPLICATE_RECORD 		=	"-rr";
 	// Parametro solo envio a host/s indicado/s (separado por comas)
 	static final String PARAM_REPLICATE_HOST 		=	"-rh";
-
+	// Parametro demora en seleccion de registros en función del campo CREATED (segundos)
+	static final String PARAM_DELAY_RECORD 			=	"-d";
 
 
 	public static void main(String args[])
@@ -483,6 +484,9 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 			else if (arg.toLowerCase().startsWith(PARAM_SKIP_FILTERS)) {
 				ReplicationConstantsWS.SKIP_FILTERS = true;
 			}
+			else if (arg.toLowerCase().startsWith(PARAM_DELAY_RECORD)) {
+				ReplicationTableManager.delayRecords = Integer.parseInt(arg.substring(PARAM_DELAY_RECORD.length()));;
+			}
 		}
 		
 	  	// OXP_HOME seteada?
@@ -521,7 +525,7 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 				"\n" + 	
 				" ------------ FRAMEWORK DE REPLICACION VIA WS. MODO DE INSTANCIACION DEL PROCESO CLIENTE --------------- " +
 				" Ejemplos de uso de proceso origen (caso tipico de uso y parametros completos): \n" +
-				" java -classpath ../../lib/OXP.jar:../../lib/OXPLib.jar:../../lib/OXPXLib.jar:lib/repClient.jar:lib/lyws.jar org.libertya.ws.client.ReplicationClientProcess " + PARAM_EVENTS_PER_CALL + "500 " + PARAM_TIMEOUT_BASE + "120000 " + PARAM_MAX_RECORDS + "1500 " + PARAM_REPLICATE_TABLE + "C_Invoice " + PARAM_REPLICATE_RECORD + "h1_1394_C_Invoice " + PARAM_REPLICATE_HOST + "2,5 \n" +
+				" java -classpath ../../lib/OXP.jar:../../lib/OXPLib.jar:../../lib/OXPXLib.jar:lib/repClient.jar:lib/lyws.jar org.libertya.ws.client.ReplicationClientProcess " + PARAM_EVENTS_PER_CALL + "500 " + PARAM_TIMEOUT_BASE + "120000 " + PARAM_MAX_RECORDS + "1500 " + PARAM_REPLICATE_TABLE + "C_Invoice " + PARAM_REPLICATE_RECORD + "h1_1394_C_Invoice " + PARAM_REPLICATE_HOST + "2,5 " + PARAM_DELAY_RECORD + "300 \n" +
 				" donde \n" +
 				" " + PARAM_EVENTS_PER_CALL  + "    es la cantidad de eventos que se envian en una misma llamada al WS. Si no se especifica, el valor por defecto es " + ReplicationConstantsWS.EVENTS_PER_CALL + ".  Si la cantidad de registros es mayor que este valor, se realizarán varias llamadas independientes (en distintas transacciones). \n" +
 				" " + PARAM_TIMEOUT_BASE     + "    redefinicion del timeout base para la invocación al WS (milisegundos). Si no se especifica, el valor por defecto es " + ReplicationConstantsWS.TIME_OUT_BASE + ". A este valor se le adiciona el parametro "+PARAM_EVENTS_PER_CALL+" * " + ReplicationConstantsWS.TIME_OUT_EXTRA_FACTOR + " \n" +
@@ -531,6 +535,7 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 				" " + PARAM_REPLICATE_TABLE  + "    limita la replicación unicamente a la tabla especificada \n" +
 				" " + PARAM_REPLICATE_RECORD + "    limita la replicación unicamente al registro especificado por su retrieveUID (ver parametro de filtro por tabla) \n" +
 				" " + PARAM_REPLICATE_HOST   + "    limita la replicación unicamente hacia el host especificado por su replicationPos (es posible indicar más de un host destino separado por comas) \n" +
+				" " + PARAM_DELAY_RECORD     + "    solo incluye los registros de cierta antiguedad en funcion de los segundos especificados en el argumento (age del campo CREATED). Por defecto se contempla cualquier antiguedad.  \n" +
 				" ------------ IMPORTANTE: NO DEBEN DEJARSE ESPACIOS ENTRE EL PARAMETRO Y EL VALOR DEL PARAMETRO! --------------- \n";
 		System.out.println(help);
 		System.exit(1);

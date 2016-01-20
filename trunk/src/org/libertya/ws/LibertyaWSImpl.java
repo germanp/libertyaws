@@ -552,6 +552,10 @@ public class LibertyaWSImpl implements LibertyaWS {
 	public synchronized MultipleRecordsResultBean recordQuery(FilteredColumnsParameterBean data, String tableName, String whereClause, boolean includeNamedReferences) {
 		return new GeneralRecordQueryHandler().recordQuery(data, tableName, whereClause, includeNamedReferences);
 	}
+
+	public MultipleRecordsResultBean recordQueryDirect(FilteredColumnsParameterBean data, String tableName, String whereClause) {
+		return new GeneralRecordQueryHandler().recordQueryDirect(data, tableName, whereClause);
+	}
 	
 	public CustomServiceResultBean customService(CustomServiceParameterBean data) {
 		return new CustomServiceHandler().customService(data);

@@ -760,5 +760,9 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		return new MultipleRecordsResult(resultBean);
 	}
 
-
+	public synchronized MultipleRecordsResult recordQueryDirect(Login login, String[] data, String tableName, String whereClause) {
+		FilteredColumnsParameterBean bean = new FilteredColumnsParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), data);
+		MultipleRecordsResultBean resultBean = new GeneralRecordQueryHandler().recordQueryDirect(bean, tableName, whereClause); 
+		return new MultipleRecordsResult(resultBean);
+	}
 }

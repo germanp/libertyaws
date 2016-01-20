@@ -34,7 +34,9 @@ public class ReplicationCheckIntegrity extends SvrProcess {
 	public static Integer sleepMS = 1000;
 	/** Tiempo a esperar la respuesta del WS previo a timeout */
 	public static Integer timeoutMS = ReplicationConstantsWS.TIME_OUT_BASE;
-		
+	/** Solo registros locales (o sea, creados en el host origen)? */
+	public static boolean localRecordsOnly = true; 
+	
 	/** ID de esta organización */
 	protected int thisOrgID = -1; 
 	/** Posicion de esta organización en el array de organización */
@@ -82,7 +84,7 @@ public class ReplicationCheckIntegrity extends SvrProcess {
 		System.out.println("Hasta: " + (dateTo != null ? dateTo : "-"));
 		System.out.println("-----------------------------------------");
 		
-		PreparedStatement pstmt = DB.prepareStatement(getSQLQuery());
+		PreparedStatement pstmt = DB.prepareStatement(getSQLQuery(), null, true);
 		ResultSet rs = pstmt.executeQuery();
 		
 		int count = 0;
@@ -106,7 +108,6 @@ public class ReplicationCheckIntegrity extends SvrProcess {
 		}
 		
 		String status = "Finalizado. Total evaluados: " + totalRecordsChecked + ". Total detectados: " + totalRecordsMarkedForFix;
-		System.out.println(status);
 		return status;
 	}
 
@@ -118,9 +119,11 @@ public class ReplicationCheckIntegrity extends SvrProcess {
 				.append(" FROM ").append(tableName)
 				.append(" WHERE 1=1 ");
 		if (dateFrom != null)
-			query.append(" AND Created >= ").append("'").append(dateFrom).append("'");
+			query.append(" AND Created::date >= '").append(dateFrom).append("'");
 		if (dateTo != null)
-			query.append(" AND Created <= ").append("'").append(dateTo).append("'");
+			query.append(" AND Created::date <= '").append(dateTo).append("'");
+		if (localRecordsOnly)
+			query.append(" AND retrieveuid ilike 'h" + thisOrgPos + "\\\\_%'" );
 		
 		return query.toString();
 	}
@@ -223,6 +226,8 @@ public class ReplicationCheckIntegrity extends SvrProcess {
 	static final String PARAM_SLEEP_SECONDS = "-ss";
 	// Parametro tiempo a esperar la respuesta del WS previo a timeout 
 	static final String PARAM_WAIT_TIMEOUT = "-wt";
+	// Parametro solo registros creados localmente 
+	static final String PARAM_LOCAL_RECORDS = "-lr";
 	// Muestra la ayuda
 	static final String PARAM_HELP = "-h";	
 	
@@ -255,6 +260,9 @@ public class ReplicationCheckIntegrity extends SvrProcess {
 			}
 			else if (arg.toLowerCase().startsWith(PARAM_WAIT_TIMEOUT)) {
 				timeoutMS = Integer.parseInt(arg.substring(PARAM_WAIT_TIMEOUT.length()));
+			}
+			else if (arg.toLowerCase().startsWith(PARAM_LOCAL_RECORDS)) {
+				localRecordsOnly = "Y".equalsIgnoreCase(arg.substring(PARAM_LOCAL_RECORDS.length()));
 			}
 		}
 		
@@ -293,7 +301,7 @@ public class ReplicationCheckIntegrity extends SvrProcess {
 	{
 		String help = " [[ " + message + " ]] " +
 				"\n" + 	
-				" ------------ FRAMEWORK DE REPLICACION VIA WS. APLICACION DE VALIDACION DE INTEGRIDAD EN REPLICACION --------------- " +
+				" ------------ FRAMEWORK DE REPLICACION VIA WS. APLICACION DE VALIDACION DE INTEGRIDAD EN REPLICACION --------------- \n" +
 				" Ejemplos de uso de proceso origen (caso tipico de uso y parametros completos): \n" +
 				" java -classpath ../../lib/OXP.jar:../../lib/OXPLib.jar:../../lib/OXPXLib.jar:lib/repClient.jar:lib/lyws.jar org.libertya.ws.client.ReplicationCheckIntegrity " + PARAM_VALIDATE_HOST + "1 " + PARAM_TABLE_NAME + "C_Invoice " + PARAM_DATE_FROM + "2015-01-01 " + PARAM_RECORD_COUNT + "500 \n" +
 				" donde \n" +
@@ -305,6 +313,7 @@ public class ReplicationCheckIntegrity extends SvrProcess {
 				" " + PARAM_RECORD_COUNT 	+ " Numero de registros a recuperar por invocacion al WS. Por defecto 1000 \n" +
 				" " + PARAM_SLEEP_SECONDS 	+ " Tiempo a dormir entre un lote de validacion y el proximo, expresado en segundos. Por defecto es 1 segundo \n" +
 				" " + PARAM_WAIT_TIMEOUT 	+ " Tiempo a esperar la respuesta del WS previo a timeout, expresado en milisegundos.  Por defecto es " + ReplicationConstantsWS.TIME_OUT_BASE + " milisegundos \n" +
+				" " + PARAM_LOCAL_RECORDS 	+ " Comtemplar solo los generados en el host origen unicamente.  Valor Y/N. Por defecto Y \n" +
 				" ------------ IMPORTANTE: NO DEBEN DEJARSE ESPACIOS ENTRE EL PARAMETRO Y EL VALOR DEL PARAMETRO! --------------- \n";
 
 		System.out.println(help);

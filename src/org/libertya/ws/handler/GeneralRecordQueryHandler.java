@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 
 import org.libertya.ws.bean.parameter.FilteredColumnsParameterBean;
+import org.libertya.ws.bean.parameter.ParameterBean;
 import org.libertya.ws.bean.result.MultipleRecordsResultBean;
 import org.libertya.ws.exception.ModelException;
 import org.openXpertya.model.M_Table;
@@ -69,5 +70,68 @@ public class GeneralRecordQueryHandler extends GeneralHandler {
 			closeTransaction();
 		}
 	}
+	
 
+
+	/**
+	 * Devuelve una serie de registros de una tabla dada, de manera directa sin instanciar POs ni pasar por diccionario de datos.  Operacion de muy bajo nivel.
+	 * @param data parametros generales de acceso y columnas a recuperar (serán las usadas en la consulta)
+	 * @param tableName Nombre de tabla (M_Product, C_BPartner, C_Order, C_Invoice, M_InOut, C_AllocationHdr, etc.)
+	 * @param whereClause criterio de filtrado
+	 * @return MultipleRecordsResultBean con OK, ERROR, los registros correspondientes
+	 */
+	public MultipleRecordsResultBean recordQueryDirect(FilteredColumnsParameterBean data, String tableName, String whereClause) {
+		try
+		{	
+			/* === Configuracion inicial === */
+			init(data, 	new String[]{"tableName", "whereClause"}, 
+						new Object[]{tableName, whereClause});
+			
+			// Verificar que haya especificado un nombre de tabla
+			if (tableName == null || tableName.length()==0)
+				throw new ModelException("Debe especificar un nombre de tabla");
+			
+			// Recuperar los registros de la bbdd 
+			String sql = "SELECT " + getColumnNames(data) + " FROM " + tableName + (whereClause==null ? "" : " WHERE " + whereClause);
+			PreparedStatement ps = DB.prepareStatement(sql, getTrxName());
+			ResultSet rs = ps.executeQuery();
+
+			// Generar valores.
+			MultipleRecordsResultBean result = new MultipleRecordsResultBean(false, null, new HashMap<String, String>());
+			while (rs.next()) {
+				HashMap<String, String> map = new HashMap<String, String>();
+				for (String columnName : data.getFilterColumns()) {
+					map.put(columnName, rs.getString(columnName));
+				}
+				result.addRecord(map);
+			}
+			
+			/* === Retornar valores === */
+			return result;
+		}
+		catch (ModelException me) {
+			return (MultipleRecordsResultBean)processException(me, new MultipleRecordsResultBean(), wsInvocationArguments(data));
+		}
+		catch (Exception e) {
+			return (MultipleRecordsResultBean)processException(e, new MultipleRecordsResultBean(), wsInvocationArguments(data));
+		}
+		finally	{
+			closeTransaction();
+		}
+	}
+
+	/** Genera el query para recuperar las columnas indicadas */
+	protected String getColumnNames(FilteredColumnsParameterBean data) {
+		StringBuffer retValue = new StringBuffer();
+		int totalColumns = data.getFilterColumns().size();
+		int count = 0;
+		for (String column : data.getFilterColumns()) {
+			count++;
+			retValue.append(column);
+			if (count<totalColumns)
+				retValue.append(",");
+		}
+		return retValue.toString();
+	}
+	
 }

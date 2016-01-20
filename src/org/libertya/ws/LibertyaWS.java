@@ -1195,6 +1195,15 @@ public interface LibertyaWS {
 	public MultipleRecordsResultBean recordQuery(FilteredColumnsParameterBean data, String tableName, String whereClause, boolean includeNamedReferences);
 	
 	/**
+	 * Devuelve una serie de registros de una tabla dada, de manera directa sin instanciar POs ni pasar por diccionario de datos.  Operacion de muy bajo nivel.
+	 * @param data parametros generales de acceso y columnas a recuperar (serán las usadas en la consulta)
+	 * @param tableName Nombre de tabla (M_Product, C_BPartner, C_Order, C_Invoice, M_InOut, C_AllocationHdr, etc.)
+	 * @param whereClause criterio de filtrado
+	 * @return MultipleRecordsResultBean con OK, ERROR, los registros correspondientes
+	 */
+	public MultipleRecordsResultBean recordQueryDirect(FilteredColumnsParameterBean data, String tableName, String whereClause);
+	
+	/**
 	 * Ejecuta un metodo específico de Libertya de manera dinámica
 	 * @param data parametros generales, información del metodo a ejecutar y parámetros
 	 * @return ResultBean con OK, ERROR, etc.

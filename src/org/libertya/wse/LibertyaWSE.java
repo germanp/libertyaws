@@ -622,4 +622,9 @@ public interface LibertyaWSE {
 	 * Wrapper para <code>recordQuery(FilteredColumnsParameterBean data, String tableName, String whereClause, boolean includeNamedReferences)</code>
 	 */	
 	public MultipleRecordsResult recordQuery(Login login, String[] data, String tableName, String whereClause, boolean includeNamedReferences);
+	
+	/**
+	 * Wrapper para <code>recordQueryDirect(FilteredColumnsParameterBean data, String tableName, String whereClause)</code>
+	 */	
+	public MultipleRecordsResult recordQueryDirect(Login login, String[] data, String tableName, String whereClause);
 }

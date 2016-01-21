@@ -334,7 +334,8 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 		String newRepArray = currentRepArraySB.toString();
 		String includeInReplicationValue = (newRepArray.indexOf(ReplicationConstantsWS.REPARRAY_REPLICATE_INSERT) >= 0 ||  
 											newRepArray.indexOf(ReplicationConstantsWS.REPARRAY_REPLICATE_MODIFICATION) >= 0 ||
-											newRepArray.indexOf(ReplicationConstantsWS.REPARRAY_RETRY1) >= 0 ? "Y":"N" );
+											newRepArray.indexOf(ReplicationConstantsWS.REPARRAY_RETRY1) >= 0 || 
+											newRepArray.indexOf(ReplicationConstantsWS.REPARRAY_REPLICATE_AFTER_RETRY1) >= 0 ? "Y":"N" );
 		
 		boolean isDeletion = MChangeLog.OPERATIONTYPE_Deletion.equals(opType);
 		// El uso de prefijo SET para el repArray solo es para tablas con triggerEvent.  La tabla AD_Changelog_Replication obviamente no lo tiene seteado

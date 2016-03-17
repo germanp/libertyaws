@@ -39,6 +39,16 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 	/** Instante de inicio del procesamiento */
 	public static Timestamp startingTime = null;
 	
+	/** Nivel de log simple o general. Solo indica el numero de registros a replicar */
+	public static final int VERBOSE_LEVEL_SIMPLE = 1;
+	/** Nivelde log detallado.  Indica los retrieveUIDs de los registros a replicar */
+	public static final int VERBOSE_LEVEL_DETAILED = 2;
+	/** Nivelde log detallado.  Indica el XML completo a replicar. ATENCION CON SU USO! Gran cantidad de informacion se genera */
+	public static final int VERBOSE_LEVEL_COMPLETE = 3;
+	
+	/** Nivel de log seleccionado.  Por defecto: simple */
+	protected static int verboseLevel = VERBOSE_LEVEL_SIMPLE;
+	
 	@Override
 	protected String doIt() throws Exception {
 		try
@@ -78,17 +88,38 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 				for (int currentFrame = 0; currentFrame < builder.replicationActionsForHost.get(targetHost).size(); currentFrame+=ReplicationConstantsWS.EVENTS_PER_CALL) 
 				{
 					try {
+						int count=0;
+						// Para Verbose Detailed 
+						StringBuffer detailXML = new StringBuffer();
+						
 						// Cargar la nomina de acciones
 						StringBuffer actionsXML = new StringBuffer();
-						for (int currentPos = currentFrame; currentPos < currentFrame + ReplicationConstantsWS.EVENTS_PER_CALL && currentPos < builder.replicationActionsForHost.get(targetHost).size(); currentPos++) 
-							actionsXML.append(builder.completeReplicationXMLData.get(builder.replicationActionsForHost.get(targetHost).get(currentPos)));	
+						for (int currentPos = currentFrame; currentPos < currentFrame + ReplicationConstantsWS.EVENTS_PER_CALL && currentPos < builder.replicationActionsForHost.get(targetHost).size(); currentPos++) {
+							count++;
+							String actionXML = builder.completeReplicationXMLData.get(builder.replicationActionsForHost.get(targetHost).get(currentPos));
+							actionsXML.append(actionXML);
+							if (verboseLevel == VERBOSE_LEVEL_DETAILED) {
+								try {
+									detailXML.append(System.getProperty("line.separator")).append(actionXML.substring(actionXML.indexOf("tableName="), actionXML.indexOf("\">") + 1));
+								} catch (Exception e) {
+									System.out.println("Error procesando XML, cambiando a verbose simple");
+									verboseLevel = VERBOSE_LEVEL_SIMPLE;
+								}
+							}
+						}
 						
 						// Iniciar la transacción
 		        		rep_trxName = Trx.createTrxName();
 		        		Trx.getTrx(rep_trxName).start();
 
 		        		// Invocar al WS y actualizar los registros según corresponda
-		        		saveLog(Level.INFO, false, "Replicando registros hacia Host: ", targetHost, true);
+		        		if (verboseLevel == VERBOSE_LEVEL_SIMPLE)
+		        			saveLog(Level.INFO, false, "Replicando " + count + " registros...", targetHost, true);
+		        		else if (verboseLevel == VERBOSE_LEVEL_DETAILED) {
+		        			saveLog(Level.INFO, false, "Registros a replicar: " + detailXML, targetHost, true);
+		        		} else if (verboseLevel == VERBOSE_LEVEL_COMPLETE) {
+		        			saveLog(Level.INFO, false, "XML de replicacion: " + System.getProperty("line.separator") + actionsXML.toString().replaceAll("</changegroup>", "</changegroup>" + System.getProperty("line.separator")), targetHost, true);
+		        		}
 		        		callWSReplication(orgs[i], actionsXML, rep_trxName, ReplicationConstantsWS.TIME_OUT_BASE + ReplicationConstantsWS.EVENTS_PER_CALL * ReplicationConstantsWS.TIME_OUT_EXTRA_FACTOR);
 		        		
 		        		// Commitear la transaccion
@@ -441,6 +472,8 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 	static final String PARAM_REPLICATE_HOST 		=	"-rh";
 	// Parametro demora en seleccion de registros en función del campo CREATED (segundos)
 	static final String PARAM_DELAY_RECORD 			=	"-d";
+	// Parametro nivel de verbose, o log
+	static final String PARAM_VERBOSE_LEVEL			=	"-vl";
 
 
 	public static void main(String args[])
@@ -487,6 +520,13 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 			}
 			else if (arg.toLowerCase().startsWith(PARAM_DELAY_RECORD)) {
 				ReplicationTableManager.delayRecords = Integer.parseInt(arg.substring(PARAM_DELAY_RECORD.length()));;
+			}			
+			else if (arg.toLowerCase().startsWith(PARAM_VERBOSE_LEVEL)) {
+				verboseLevel = Integer.parseInt(arg.substring(PARAM_VERBOSE_LEVEL.length()));;
+				if (verboseLevel < 1 || verboseLevel > 3) {
+					showHelp("ERROR: El nivel de verbose debe ser 1, 2 o 3");
+				}
+					
 			}
 		}
 		
@@ -537,6 +577,7 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 				" " + PARAM_REPLICATE_RECORD + "    limita la replicación unicamente al registro especificado por su retrieveUID (ver parametro de filtro por tabla) \n" +
 				" " + PARAM_REPLICATE_HOST   + "    limita la replicación unicamente hacia el host especificado por su replicationPos (es posible indicar más de un host destino separado por comas) \n" +
 				" " + PARAM_DELAY_RECORD     + "    solo incluye los registros de cierta antiguedad en funcion de los segundos especificados en el argumento (age del campo CREATED). Por defecto se contempla cualquier antiguedad.  \n" +
+				" " + PARAM_VERBOSE_LEVEL    + "    nivel de verbose. Puede ser 1 (simple: solo total de registros replicandos), 2 (detallado: retrieveuid de los registros), 3 (completo: el XML completo enviado al host destino).  Valor por defecto es 1.  \n" +
 				" ------------ IMPORTANTE: NO DEBEN DEJARSE ESPACIOS ENTRE EL PARAMETRO Y EL VALOR DEL PARAMETRO! --------------- \n";
 		System.out.println(help);
 		System.exit(1);
@@ -549,7 +590,7 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 		saveLog(aLevel, persistError, logMessage, targetOrgPosOrID);
 		if (displayInTerminal) {
 			if (targetOrgPosOrID != null && targetOrgPosOrID > 0)
-				System.out.println("" + logMessage + ". Target: " + targetOrgPosOrID);
+				System.out.println("[Target: " + targetOrgPosOrID + "] " + logMessage);
 			else
 				System.out.println("" + logMessage);
 		}

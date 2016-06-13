@@ -865,6 +865,12 @@ public interface LibertyaWS {
 	 */
 	public ResultBean userDeleteByID(ParameterBean data, int userID);
 
+	/**
+	 * Consulta por las compañías/organizaciones sobre las que tiene acceso el usuario
+	 * @param data parametros de acceso.  Unicamente usuario y password
+	 * @return ResultBean con la nomina de compañías / organizaciones.
+	 */
+	public MultipleDocumentsResultBean userClientOrgAccessQuery(ParameterBean data);
 	
 	/* ================================================================== */
 	/* ============================ Stock =============================== */
@@ -1209,4 +1215,6 @@ public interface LibertyaWS {
 	 * @return ResultBean con OK, ERROR, etc.
 	 */
 	public CustomServiceResultBean customService(CustomServiceParameterBean data);
+	
+
 }

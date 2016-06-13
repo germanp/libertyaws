@@ -388,6 +388,10 @@ public class LibertyaWSImpl implements LibertyaWS {
 		return new UserCRUDHandler().userDeleteByID(data, userID);
 	}
 	
+	public MultipleDocumentsResultBean userClientOrgAccessQuery(ParameterBean data) {
+		return new UserCRUDHandler().userClientOrgAccessQuery(data);
+	}
+	
 	/* ================================================================== */
 	/* ============================ Stock =============================== */
 	/* ================================================================== */

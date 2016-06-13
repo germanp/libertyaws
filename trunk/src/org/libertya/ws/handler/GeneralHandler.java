@@ -182,24 +182,30 @@ public abstract class GeneralHandler {
 		if (Env.getContext(getCtx(), "#AD_Org_ID") == null)
 			throw new Exception ("Error al chequear login.  AD_Org_ID no esta configurada.");
 
+		// Iniciar ambiente
+		setOXPHome();
+	  	if (!OpenXpertya.startup( false ))
+	  		throw new Exception ("Error al iniciar entorno (Hay conexión a Base de Datos?) ");	
+	}
+	
+	/** 
+	 * Configura OXP_HOME y ubicacion de log segun las variables de entorno 
+	 */
+	protected void setOXPHome() throws Exception {
 	  	// OXP_HOME seteada?
 	  	String oxpHomeDir = System.getenv(ENV_OXP_HOME); 
 	  	if (oxpHomeDir == null)
 	  		throw new Exception ("La variable de entorno OXP_HOME no está seteada. ");
-	
+	  	// Cargar el entorno basico
+	  	System.setProperty(ENV_OXP_HOME, oxpHomeDir);
+	  	
 	  	// OXP_WS_LOG seteada? Si no está seteada, utilizar la conf. de oxpHomeDir
 	  	String oxpWSLog = System.getenv(ENV_OXP_WS_LOG);
 	  	if (oxpWSLog == null)
 	  		System.setProperty(ENV_OXP_WS_LOG, oxpHomeDir);
 	  	else
 	  		System.setProperty(ENV_OXP_WS_LOG, oxpWSLog);
-	  	
-	  	// Cargar el entorno basico
-	  	System.setProperty(ENV_OXP_HOME, oxpHomeDir);
-	  	if (!OpenXpertya.startup( false ))
-	  		throw new Exception ("Error al iniciar entorno (Hay conexión a Base de Datos?) ");	
 	}
-	
 	
 	/**
 	 * 	Valida el acceso al WS

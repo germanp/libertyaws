@@ -439,6 +439,11 @@ public interface LibertyaWSE {
 	 */
 	public SimpleResult userDeleteByID(Login login, int userID);
 	
+	/**
+	 * Wrapper para <code>userClientOrgAccessQuery(ParameterBean data)</code>
+	 */	
+	public MultipleRecordsResult userClientOrgAccessQuery(Login login);
+	
 	/* ================================================================== */
 	/* ========================= Inventario ============================= */
 	/* ================================================================== */

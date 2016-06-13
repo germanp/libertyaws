@@ -1,12 +1,21 @@
 package org.libertya.ws.handler;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.compiere.plaf.CompierePLAF;
 import org.libertya.ws.bean.parameter.ParameterBean;
+import org.libertya.ws.bean.result.MultipleDocumentsResultBean;
 import org.libertya.ws.bean.result.ResultBean;
 import org.libertya.ws.exception.ModelException;
+import org.openXpertya.db.CConnection;
 import org.openXpertya.model.MUser;
 import org.openXpertya.util.CLogger;
+import org.openXpertya.util.DB;
+import org.openXpertya.util.Env;
+import org.openXpertya.util.Ini;
+import org.openXpertya.util.KeyNamePair;
+import org.openXpertya.util.Login;
 
 public class UserCRUDHandler extends GeneralHandler {
 
@@ -186,5 +195,86 @@ public class UserCRUDHandler extends GeneralHandler {
 			closeTransaction();
 		}
 	}
+	
+	/**
+	 * Consulta de acceso de compañías/organizaciones sobre las cuales el usuario puede operar
+	 * @param data username y password
+	 * @return nomina de accesos
+	 */
+	public MultipleDocumentsResultBean userClientOrgAccessQuery(ParameterBean data) {
+		try
+		{
+			// Setear un contexto minimo.  Esta operacion es un tanto particular, con lo cual difiere del resto en este aspecto
+			setOXPHome();
+			saveToLogFile(INFO_LOG, "Ejecutando " + Thread.currentThread().getStackTrace()[1].getMethodName());
+		  	
+			/* === Procesar (logica especifica) === */			
+			ArrayList<HashMap<String, String>> clientOrgAccesses = getAccesses(data.getUserName(), data.getPassword());
+			
+			// Retornar valores
+			MultipleDocumentsResultBean result = new MultipleDocumentsResultBean(false, null, new HashMap<String, String>());
+			result.setDocumentHeaders(clientOrgAccesses);
+			
+			/* === Retornar valor === */
+			return result;
+		}
+		catch (Exception e) {
+			return (MultipleDocumentsResultBean)processException(e, new MultipleDocumentsResultBean(), wsInvocationArguments(data));
+		}
+		finally	{
+			closeTransaction();
+		}
+	}
 
+	/**
+	 * Codigo tomado de ALogin.tryConnection() y adecuado.  Dado que el metodo era private,
+	 * no queda otra que replicar la lógica aquí a fin de evitar que LYWS dependa de una version más nueva de CORE
+	 */
+    protected ArrayList<HashMap<String, String>> getAccesses(String m_user, String m_pwd) throws Exception {
+
+        // Establish connection
+    	Ini.loadProperties(false);
+        DB.setDBTarget( CConnection.get());
+        if( !DB.isConnected()) { 
+        	throw new Exception("Sin conexion a la base de datos");
+        }
+
+        // Reference check
+        Ini.setProperty(Ini.P_OXPSYS, "Reference".equalsIgnoreCase(CConnection.get().getDbUid()));
+
+        ArrayList<HashMap<String, String>> retValues = new ArrayList<HashMap<String, String>>(); 
+        
+        // Roles
+        Login m_login = new Login( Env.getCtx() );
+        KeyNamePair[] roles = m_login.getRoles( m_user,m_pwd );
+        if (roles == null) {
+        	throw new Exception("No roles. " + CLogger.retrieveErrorAsString());
+        }
+        for (KeyNamePair role : roles) {
+            // Compañías
+        	KeyNamePair[] clients = m_login.getClients( role );
+            if (clients == null)
+            	continue;
+        	for (KeyNamePair client : clients) {
+                // Organizaciones
+        		KeyNamePair[] orgs = m_login.getOrgs( client );
+        		if (orgs == null)
+        			continue;
+        		for (KeyNamePair org : orgs) {
+        			HashMap<String, String> retValue = new HashMap<String, String>();
+        			retValue.put("AD_Role_ID", ""+role.getKey());
+        			retValue.put("RoleName", role.getName());
+        			retValue.put("AD_Client_ID", ""+client.getKey());
+        			retValue.put("ClientName", client.getName());
+        			retValue.put("AD_Org_ID", ""+org.getKey());
+        			retValue.put("OrgName", org.getName());
+        			retValues.add(retValue);
+        		}
+        	}
+        }
+
+        return retValues;
+
+    }    
+	
 }

@@ -98,6 +98,7 @@ public class AllocationDocumentHandler extends GeneralHandler {
 			POCRGenerator rcGenerator = new POCRGenerator(getCtx(), POCRType.CUSTOMER_RECEIPT, getTrxName());
 			MAllocationHdr allocationHdr = rcGenerator.createAllocationHdr();
 			allocationHdr.setC_BPartner_ID(aBPartner.getC_BPartner_ID());
+			manageDocumentNo(allocationHdr, data);
 			setValues(allocationHdr, data.getMainTable(), true);
 			allocationHdr.setIsManual(false);
 
@@ -476,5 +477,18 @@ public class AllocationDocumentHandler extends GeneralHandler {
 			throw new ModelException (" La moneda del tipo de medio de pago (POSPaymentMedium) difiere con respecto a la moneda del libro de caja ");
 	}
 	
+	
+	/** 
+	 *	Verifica si se recibio un tipo de documento (y no se recibió un documentNo),
+	 *  el cual será usado como base para gestionar la secuencia para el documentNo 
+	 */
+	protected void manageDocumentNo(MAllocationHdr allocationHdr, AllocationParameterBean data) throws Exception {
+		// Si se recibe un docType y no se recibe un DocumentNo, entonces forzarlo a "".  De esta manera
+		// el prepareIt() de MAllocationHdr tomará la secuencia del C_DocType
+		HashMap<String, String> args = toLowerCaseKeys(data.getMainTable());
+		if ((args.get("c_doctype_id") != null && args.get("c_doctype_id").length() > 0) && (args.get("documentno") == null) ) {
+			data.addColumnToMainTable("DocumentNo", "");
+		}
+	}
 	
 }

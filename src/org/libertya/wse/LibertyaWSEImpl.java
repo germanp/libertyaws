@@ -546,6 +546,11 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		return new SimpleResult(resultBean);
 	}
 
+	public MultipleRecordsResult userClientOrgAccessQuery(Login login) {
+		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
+		MultipleDocumentsResultBean resultBean = new UserCRUDHandler().userClientOrgAccessQuery(bean);
+		return new MultipleRecordsResult(resultBean);
+	}
 
 	/* ================================================================== */
 	/* ========================= Inventario ============================= */

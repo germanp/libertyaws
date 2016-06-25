@@ -487,7 +487,10 @@ public class AllocationDocumentHandler extends GeneralHandler {
 		// el prepareIt() de MAllocationHdr tomará la secuencia del C_DocType
 		HashMap<String, String> args = toLowerCaseKeys(data.getMainTable());
 		if ((args.get("c_doctype_id") != null && args.get("c_doctype_id").length() > 0) && (args.get("documentno") == null) ) {
-			data.addColumnToMainTable("DocumentNo", "");
+			// Validar si el tipo de documento efectivamente tiene una secuencia especificada.  Si no la tiene, entonces no hacer cambios 
+			if (DB.getSQLValue(getTrxName(), "SELECT docnosequence_id FROM C_DocType WHERE C_DocType_ID = " + args.get("c_doctype_id")) > 0) {
+				data.addColumnToMainTable("DocumentNo", "");
+			}
 		}
 	}
 	

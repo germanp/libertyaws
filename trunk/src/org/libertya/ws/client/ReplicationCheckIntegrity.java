@@ -147,6 +147,9 @@ public class ReplicationCheckIntegrity extends SvrProcess {
 		
 		// Realizar la comparacion caso por caso
 		for (String sourceUID : sourceValues.keySet()) {
+			// Si la columna columnName se encuentra en null en ambos hosts, omitir actividad para este registro
+			if (sourceValues.get(sourceUID) == null && targetValues.get(sourceUID) == null)
+				continue;
 			// La columna columnName (por ejemplo Updated) tiene mismo valor tanto en el origen como en el destino?
 			if ( 	(sourceValues.get(sourceUID) != null && targetValues.get(sourceUID) == null) ||
 					(sourceValues.get(sourceUID) == null && targetValues.get(sourceUID) != null) || 

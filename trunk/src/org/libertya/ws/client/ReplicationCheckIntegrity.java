@@ -148,7 +148,9 @@ public class ReplicationCheckIntegrity extends SvrProcess {
 		// Realizar la comparacion caso por caso
 		for (String sourceUID : sourceValues.keySet()) {
 			// La columna columnName (por ejemplo Updated) tiene mismo valor tanto en el origen como en el destino?
-			if ( !(sourceValues.get(sourceUID)).equals(targetValues.get(sourceUID)) ) {
+			if ( 	(sourceValues.get(sourceUID) != null && targetValues.get(sourceUID) == null) ||
+					(sourceValues.get(sourceUID) == null && targetValues.get(sourceUID) != null) || 
+					(!(sourceValues.get(sourceUID)).equals(targetValues.get(sourceUID))) ) {
 				// Si no son iguales, simplemente hacer una modificacion dummy para que el trigger cambie el reparray a fin de forzar re-replicación
 				totalRecordsMarkedForFix++;
 				System.out.println("Valor en origen: " + sourceValues.get(sourceUID) + ". Valor en destino: " + targetValues.get(sourceUID) + ". Marcando registro " + sourceUID + " para su re-replicacion");

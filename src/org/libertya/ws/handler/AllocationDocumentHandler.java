@@ -95,7 +95,9 @@ public class AllocationDocumentHandler extends GeneralHandler {
 			}
 			
 			// Instanciar nuevo allocation (tipo recibo)
-			POCRGenerator rcGenerator = new POCRGenerator(getCtx(), POCRType.CUSTOMER_RECEIPT, getTrxName());
+			String paymentRule = toLowerCaseKeys(data.getMainTable()).get("paymentrule"); // Verificar si se recibe un paymentRule
+			POCRGenerator rcGenerator = new POCRGenerator(getCtx(), POCRType.CUSTOMER_RECEIPT, paymentRule, getTrxName());
+			paymentRule = rcGenerator.getPaymentRule();  // Se lee el paymentRule definitivo (ya sea el recibido en la map o el obtenido por defecto en el constructor de PORCGenerator)
 			MAllocationHdr allocationHdr = rcGenerator.createAllocationHdr();
 			allocationHdr.setC_BPartner_ID(aBPartner.getC_BPartner_ID());
 			manageDocumentNo(allocationHdr, data);
@@ -126,7 +128,7 @@ public class AllocationDocumentHandler extends GeneralHandler {
 			// Agregar los medios de pago para cancelar las facturas
 			for (HashMap<String, String> paymentMap : data.getPayments()) {
 				// Adicionar el pago a la nomina
-				addPaymentToAllocation(rcGenerator, paymentMap, aBPartner, allocationHdr, isEarlyPayment);
+				addPaymentToAllocation(rcGenerator, paymentMap, aBPartner, allocationHdr, isEarlyPayment, paymentRule);
 			}
 			
 			// Generar las lineas del allocation en funcion de los pagos y facturas cargados en rcGenerator
@@ -225,7 +227,7 @@ public class AllocationDocumentHandler extends GeneralHandler {
 	 * @param paymentMap datos del pago
 	 * @param ppm tipo de pago 
 	 */
-	protected void addPaymentToAllocation(POCRGenerator rcGenerator, HashMap<String, String> paymentMap, MBPartner aBPartner, MAllocationHdr allocationHdr, boolean isEarlyPayment) throws ModelException, Exception {
+	protected void addPaymentToAllocation(POCRGenerator rcGenerator, HashMap<String, String> paymentMap, MBPartner aBPartner, MAllocationHdr allocationHdr, boolean isEarlyPayment, String paymentRule) throws ModelException, Exception {
 
 		// Determinar el monto y tipo de pago a instanciar 
 		paymentMap = toLowerCaseKeys(paymentMap);
@@ -240,7 +242,7 @@ public class AllocationDocumentHandler extends GeneralHandler {
 		/* Retención (invoice) */
 		else if (MPOSPaymentMedium.TENDERTYPE_Retencion.equals(ppm.getTenderType())) {
 			// Incorporar la retencion (en Recibos de Cliente, la misma NO es calculada)
-			GeneratorRetenciones genRet = new GeneratorRetenciones(aBPartner.getC_BPartner_ID(), new Vector<Integer>(), new Vector<BigDecimal>(), amount, true);
+			GeneratorRetenciones genRet = new GeneratorRetenciones(aBPartner.getC_BPartner_ID(), new Vector<Integer>(), new Vector<BigDecimal>(), amount, true, paymentRule);
 			genRet.setTrxName(getTrxName());
 			RetencionProcessor rp = genRet.addRetencion(Integer.parseInt(paymentMap.get("c_retencionschema_id")));
 			rp.setAmount(amount);

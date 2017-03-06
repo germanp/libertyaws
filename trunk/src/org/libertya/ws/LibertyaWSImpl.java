@@ -275,11 +275,11 @@ public class LibertyaWSImpl implements LibertyaWS {
 		return new OrderDocumentHandler().orderVoidByColumn(data, columnName, columnCriteria);
 	}
 	
-	public ResultBean orderUpdateByID(ParameterBean data, int orderID, boolean completeOrder) {
+	public synchronized ResultBean orderUpdateByID(ParameterBean data, int orderID, boolean completeOrder) {
 		return new OrderDocumentHandler().orderUpdateByID(data, orderID, completeOrder);
 	}
 	
-	public ResultBean orderUpdateByColumn(ParameterBean data, String columnName, String columnCriteria, boolean completeOrder) {
+	public synchronized ResultBean orderUpdateByColumn(ParameterBean data, String columnName, String columnCriteria, boolean completeOrder) {
 		return new OrderDocumentHandler().orderUpdateByColumn(data, columnName, columnCriteria, completeOrder);
 	}
 
@@ -388,7 +388,7 @@ public class LibertyaWSImpl implements LibertyaWS {
 		return new UserCRUDHandler().userDeleteByID(data, userID);
 	}
 	
-	public MultipleDocumentsResultBean userClientOrgAccessQuery(ParameterBean data) {
+	public synchronized MultipleDocumentsResultBean userClientOrgAccessQuery(ParameterBean data) {
 		return new UserCRUDHandler().userClientOrgAccessQuery(data);
 	}
 	
@@ -532,11 +532,11 @@ public class LibertyaWSImpl implements LibertyaWS {
 	/* ========================== Procesos ============================== */
 	/* ================================================================== */
 
-	public ResultBean processFiscalPrinterClose(ParameterBean data) {
+	public synchronized ResultBean processFiscalPrinterClose(ParameterBean data) {
 		return new ProcessExecuteHandler().processFiscalPrinterClose(data);
 	}
 
-	public ResultBean processCreditCardBatchClose(ParameterBean data) {
+	public synchronized ResultBean processCreditCardBatchClose(ParameterBean data) {
 		return new ProcessExecuteHandler().processCreditCardBatchClose(data);
 	}
 	
@@ -557,11 +557,11 @@ public class LibertyaWSImpl implements LibertyaWS {
 		return new GeneralRecordQueryHandler().recordQuery(data, tableName, whereClause, includeNamedReferences);
 	}
 
-	public MultipleRecordsResultBean recordQueryDirect(FilteredColumnsParameterBean data, String tableName, String whereClause) {
+	public synchronized MultipleRecordsResultBean recordQueryDirect(FilteredColumnsParameterBean data, String tableName, String whereClause) {
 		return new GeneralRecordQueryHandler().recordQueryDirect(data, tableName, whereClause);
 	}
 	
-	public CustomServiceResultBean customService(CustomServiceParameterBean data) {
+	public synchronized CustomServiceResultBean customService(CustomServiceParameterBean data) {
 		return new CustomServiceHandler().customService(data);
 	}
 

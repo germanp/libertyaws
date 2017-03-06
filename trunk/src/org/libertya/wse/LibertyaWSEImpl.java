@@ -546,7 +546,7 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		return new SimpleResult(resultBean);
 	}
 
-	public MultipleRecordsResult userClientOrgAccessQuery(Login login) {
+	public synchronized MultipleRecordsResult userClientOrgAccessQuery(Login login) {
 		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID());
 		MultipleDocumentsResultBean resultBean = new UserCRUDHandler().userClientOrgAccessQuery(bean);
 		return new MultipleRecordsResult(resultBean);
@@ -737,13 +737,13 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 	/* ========================== Procesos ============================== */
 	/* ================================================================== */
 	
-	public SimpleResult processFiscalPrinterClose(Login login, SimpleMap[] arguments) {
+	public synchronized SimpleResult processFiscalPrinterClose(Login login, SimpleMap[] arguments) {
 		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), arguments);
 		ResultBean resultBean = new ProcessExecuteHandler().processFiscalPrinterClose(bean);
 		return new SimpleResult(resultBean);
 	}
 
-	public SimpleResult processCreditCardBatchClose(Login login, SimpleMap[] arguments) {
+	public synchronized SimpleResult processCreditCardBatchClose(Login login, SimpleMap[] arguments) {
 		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), arguments);
 		ResultBean resultBean = new ProcessExecuteHandler().processCreditCardBatchClose(bean);
 		return new SimpleResult(resultBean);		

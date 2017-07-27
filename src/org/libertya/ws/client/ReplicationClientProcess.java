@@ -22,7 +22,6 @@ import org.openXpertya.replication.ReplicationConstants;
 import org.openXpertya.replication.ReplicationConstantsWS;
 import org.openXpertya.replication.ReplicationTableManager;
 import org.openXpertya.replication.ReplicationUtils;
-import org.openXpertya.util.CLogger;
 import org.openXpertya.util.DB;
 import org.openXpertya.util.EMail;
 import org.openXpertya.util.Env;
@@ -466,6 +465,8 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 	static final String PARAM_SKIP_FILTERS			=	"-s";
 	// Parametro solo envio tabla indicada
 	static final String PARAM_REPLICATE_TABLE 		=	"-rt";
+	// Parametro de filtro avanzado de filtrado de tablas
+	static final String PARAM_ADVANCED_TABLE_FILTER	=	"-atf";
 	// Parametro solo envio registro indicado
 	static final String PARAM_REPLICATE_RECORD 		=	"-rr";
 	// Parametro solo envio a host/s indicado/s (separado por comas)
@@ -494,6 +495,13 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 					cacheInvalidated = true;
 				}
 				ReplicationTableManager.filterTable = arg.substring(PARAM_REPLICATE_TABLE.length());
+			}
+			else if (arg.toLowerCase().startsWith(PARAM_ADVANCED_TABLE_FILTER)) {
+				if (cacheInvalidated) {
+					ReplicationTableManager.invalidateCache();
+					cacheInvalidated = true;
+				}
+				ReplicationTableManager.advancedFilterTable = arg.substring(PARAM_ADVANCED_TABLE_FILTER.length());
 			}
 			else if (arg.toLowerCase().startsWith(PARAM_REPLICATE_RECORD)) {
 				if (cacheInvalidated) {
@@ -566,18 +574,19 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 				"\n" + 	
 				" ------------ FRAMEWORK DE REPLICACION VIA WS. MODO DE INSTANCIACION DEL PROCESO CLIENTE --------------- " +
 				" Ejemplos de uso de proceso origen (caso tipico de uso y parametros completos): \n" +
-				" java -classpath ../../lib/OXP.jar:../../lib/OXPLib.jar:../../lib/OXPXLib.jar:lib/repClient.jar:lib/lyws.jar org.libertya.ws.client.ReplicationClientProcess " + PARAM_EVENTS_PER_CALL + "500 " + PARAM_TIMEOUT_BASE + "120000 " + PARAM_MAX_RECORDS + "1500 " + PARAM_REPLICATE_TABLE + "C_Invoice " + PARAM_REPLICATE_RECORD + "h1_1394_C_Invoice " + PARAM_REPLICATE_HOST + "2,5 " + PARAM_DELAY_RECORD + "300 \n" +
+				" java -classpath ../../lib/OXP.jar:../../lib/OXPLib.jar:../../lib/OXPXLib.jar:lib/repClient.jar:lib/lyws.jar org.libertya.ws.client.ReplicationClientProcess " + PARAM_EVENTS_PER_CALL + "500 " + PARAM_TIMEOUT_BASE + "120000 " + PARAM_MAX_RECORDS + "1500 " + PARAM_REPLICATE_TABLE + "C_Invoice " + PARAM_REPLICATE_RECORD + "h1_1394_C_Invoice " + PARAM_REPLICATE_HOST + "2,5 " + PARAM_DELAY_RECORD + "300 " + PARAM_ADVANCED_TABLE_FILTER + "\"tablename NOT IN ('C_Order') "+ReplicationTableManager.DELETIONS_SQL_MODIFIER+"\" \n" +
 				" donde \n" +
-				" " + PARAM_EVENTS_PER_CALL  + "    es la cantidad de eventos que se envian en una misma llamada al WS. Si no se especifica, el valor por defecto es " + ReplicationConstantsWS.EVENTS_PER_CALL + ".  Si la cantidad de registros es mayor que este valor, se realizarán varias llamadas independientes (en distintas transacciones). \n" +
-				" " + PARAM_TIMEOUT_BASE     + "    redefinicion del timeout base para la invocación al WS (milisegundos). Si no se especifica, el valor por defecto es " + ReplicationConstantsWS.TIME_OUT_BASE + ". A este valor se le adiciona el parametro "+PARAM_EVENTS_PER_CALL+" * " + ReplicationConstantsWS.TIME_OUT_EXTRA_FACTOR + " \n" +
-				" " + PARAM_MAX_RECORDS      + "    especifica el numero maximo de registros a procesar para su envio a los demas hosts (0 = todos) \n" +
-				" " + PARAM_WARNING_LIMIT    + "    envio de warning por mail al tener una cantidad de registros pendientes a replicar mayor al valor indicado.  Valor por defecto: " + ReplicationConstantsWS.WARNING_LIMIT + ". El mail sera enviado a la direccion especificada en AD_Preference, atributo: ReplicationAdmin. La cuenta origen se configura en AD_Client \n" +
-				" " + PARAM_SKIP_FILTERS     + "    saltear (no aplicar) los filtros de replicacion en esta ejecucion \n" +
-				" " + PARAM_REPLICATE_TABLE  + "    limita la replicación unicamente a la tabla especificada \n" +
-				" " + PARAM_REPLICATE_RECORD + "    limita la replicación unicamente al registro especificado por su retrieveUID (ver parametro de filtro por tabla) \n" +
-				" " + PARAM_REPLICATE_HOST   + "    limita la replicación unicamente hacia el host especificado por su replicationPos (es posible indicar más de un host destino separado por comas) \n" +
-				" " + PARAM_DELAY_RECORD     + "    solo incluye los registros de cierta antiguedad en funcion de los segundos especificados en el argumento (age del campo CREATED). Por defecto se contempla cualquier antiguedad.  \n" +
-				" " + PARAM_VERBOSE_LEVEL    + "    nivel de verbose. Puede ser 1 (simple: solo total de registros replicandos), 2 (detallado: retrieveuid de los registros), 3 (completo: el XML completo enviado al host destino).  Valor por defecto es 1.  \n" +
+				" " + PARAM_EVENTS_PER_CALL  		+ "    es la cantidad de eventos que se envian en una misma llamada al WS. Si no se especifica, el valor por defecto es " + ReplicationConstantsWS.EVENTS_PER_CALL + ".  Si la cantidad de registros es mayor que este valor, se realizarán varias llamadas independientes (en distintas transacciones). \n" +
+				" " + PARAM_TIMEOUT_BASE     		+ "    redefinicion del timeout base para la invocación al WS (milisegundos). Si no se especifica, el valor por defecto es " + ReplicationConstantsWS.TIME_OUT_BASE + ". A este valor se le adiciona el parametro "+PARAM_EVENTS_PER_CALL+" * " + ReplicationConstantsWS.TIME_OUT_EXTRA_FACTOR + " \n" +
+				" " + PARAM_MAX_RECORDS      		+ "    especifica el numero maximo de registros a procesar para su envio a los demas hosts (0 = todos) \n" +
+				" " + PARAM_WARNING_LIMIT    		+ "    envio de warning por mail al tener una cantidad de registros pendientes a replicar mayor al valor indicado.  Valor por defecto: " + ReplicationConstantsWS.WARNING_LIMIT + ". El mail sera enviado a la direccion especificada en AD_Preference, atributo: ReplicationAdmin. La cuenta origen se configura en AD_Client \n" +
+				" " + PARAM_SKIP_FILTERS     		+ "    saltear (no aplicar) los filtros de replicacion en esta ejecucion \n" +
+				" " + PARAM_REPLICATE_TABLE  		+ "    limita la replicación unicamente a la tabla especificada \n" +
+				" " + PARAM_ADVANCED_TABLE_FILTER 	+ "    filtro avanzado de replicacion de tablas, indicando clausula SQL posterior, tal como \"tablename IN ('C_Invoice', 'C_Order')\" o \"LOWER(tablename) NOT IN ('c_elementvalue')\". Soporta pseudo-clausula "+ReplicationTableManager.DELETIONS_SQL_MODIFIER+" que implica incluir la tabla de eliminaciones. Notar las comillas en el argumento!\n" +
+				" " + PARAM_REPLICATE_RECORD 		+ "    limita la replicación unicamente al registro especificado por su retrieveUID (ver parametro de filtro por tabla) \n" +
+				" " + PARAM_REPLICATE_HOST   		+ "    limita la replicación unicamente hacia el host especificado por su replicationPos (es posible indicar más de un host destino separado por comas) \n" +
+				" " + PARAM_DELAY_RECORD     		+ "    solo incluye los registros de cierta antiguedad en funcion de los segundos especificados en el argumento (age del campo CREATED). Por defecto se contempla cualquier antiguedad.  \n" +
+				" " + PARAM_VERBOSE_LEVEL    		+ "    nivel de verbose. Puede ser 1 (simple: solo total de registros replicandos), 2 (detallado: retrieveuid de los registros), 3 (completo: el XML completo enviado al host destino).  Valor por defecto es 1.  \n" +
 				" ------------ IMPORTANTE: NO DEBEN DEJARSE ESPACIOS ENTRE EL PARAMETRO Y EL VALOR DEL PARAMETRO! --------------- \n";
 		System.out.println(help);
 		System.exit(1);

@@ -1,7 +1,11 @@
 package org.libertya.ws.client;
 
 import java.rmi.RemoteException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -48,6 +52,9 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 	/** Nivel de log seleccionado.  Por defecto: simple */
 	protected static int verboseLevel = VERBOSE_LEVEL_SIMPLE;
 	
+	/** Processed records per host */
+	static int totalRecords = 0;
+	
 	@Override
 	protected String doIt() throws Exception {
 		try
@@ -71,22 +78,34 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 			// El builder se encarga de generar los XMLs para cada host destino y cargar el replicationActionsForHost
 			builder.fillDocument();
 
-			/* Iterar por todas los hosts */
-			int[] orgs = PO.getAllIDs("AD_Org", " AD_Client_ID = " + getAD_Client_ID() + " AND AD_Org_ID != " + thisOrgID, null);
-			for (int i=0; i<orgs.length; i++)
+			/* Iterar por todas los hosts. Ordernar por numero de host para que sea mas sencillo supervisar la actividad */
+			PreparedStatement pstmt = DB.prepareStatement("select o.ad_org_id from ad_org o left join ad_replicationhost rh on o.ad_org_id = rh.ad_org_id where o.ad_client_id = " + getAD_Client_ID() + " and o.ad_org_id != " + thisOrgID + " order by replicationarraypos asc");
+			ResultSet rs = pstmt.executeQuery();
+			ArrayList<Integer> list = new ArrayList<Integer>();
+			while (rs.next()) {
+				list.add(rs.getInt("ad_org_id"));
+			}
+
+			// Replicar host a host
+			for (int orgID : list)
 			{
+				// Numero de registros procesados (replicados o con error) para el host actual
+				totalRecords = 0;
+				
 				// Recuperar posicion del host en el repArray
-				int targetHost = MReplicationHost.getReplicationPositionForOrg(orgs[i], null);
+				int targetHost = MReplicationHost.getReplicationPositionForOrg(orgID, null);
 				if (targetHost == -1 || builder.replicationActionsForHost.get(targetHost)==null)
 					continue;
-				if (!MReplicationHost.isHostActive(orgs[i], null)) {
+				if (!MReplicationHost.isHostActive(orgID, null)) {
 					saveLog(Level.INFO, false, "Omitiendo. Host inactivo: ", targetHost, true);
 					continue;
 				}
 				// Invocar al WS agrupando un conjunto de acciones según el máximo en ReplicationConstantsWS.EVENTS_PER_CALL
+				int iter=0;
 				for (int currentFrame = 0; currentFrame < builder.replicationActionsForHost.get(targetHost).size(); currentFrame+=ReplicationConstantsWS.EVENTS_PER_CALL) 
 				{
 					try {
+						iter++;
 						int count=0;
 						// Para Verbose Detailed 
 						StringBuffer detailXML = new StringBuffer();
@@ -112,14 +131,18 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 		        		Trx.getTrx(rep_trxName).start();
 
 		        		// Invocar al WS y actualizar los registros según corresponda
-		        		if (verboseLevel == VERBOSE_LEVEL_SIMPLE)
-		        			saveLog(Level.INFO, false, "Replicando " + count + " registros...", targetHost, true);
+		        		if (verboseLevel == VERBOSE_LEVEL_SIMPLE) {
+		        			// En modo simple, mostrar el mensaje solo la primera vez hacia cada host vez
+		        			if (iter==1) {
+		        				saveLog(Level.INFO, false, "=== Replicando " + builder.replicationActionsForHost.get(targetHost).size() + " registros en lotes de " + count + " registros cada uno ===", targetHost, true);
+		        			}
+		        		}
 		        		else if (verboseLevel == VERBOSE_LEVEL_DETAILED) {
 		        			saveLog(Level.INFO, false, "Registros a replicar: " + detailXML, targetHost, true);
 		        		} else if (verboseLevel == VERBOSE_LEVEL_COMPLETE) {
 		        			saveLog(Level.INFO, false, "XML de replicacion: " + System.getProperty("line.separator") + actionsXML.toString().replaceAll("</changegroup>", "</changegroup>" + System.getProperty("line.separator")), targetHost, true);
 		        		}
-		        		callWSReplication(orgs[i], actionsXML, rep_trxName, ReplicationConstantsWS.TIME_OUT_BASE + ReplicationConstantsWS.EVENTS_PER_CALL * ReplicationConstantsWS.TIME_OUT_EXTRA_FACTOR);
+		        		callWSReplication(orgID, actionsXML, rep_trxName, ReplicationConstantsWS.TIME_OUT_BASE + ReplicationConstantsWS.EVENTS_PER_CALL * ReplicationConstantsWS.TIME_OUT_EXTRA_FACTOR);
 		        		
 		        		// Commitear la transaccion
 		        		Trx.getTrx(rep_trxName).commit();
@@ -351,7 +374,8 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 				saveLog(Level.SEVERE, true, errorDetail.toString(), repArrayPos, true);
 			}
 		}
-		saveLog(Level.INFO, false, "Registros replicados:" + okCount + ", Registros con error:" + errorCount, -1, true);
+		totalRecords = totalRecords + okCount + errorCount;
+		saveLog(Level.INFO, false, "Registros replicados:" + okCount + ", Registros con error:" + errorCount + ". Procesados:" + totalRecords, repArrayPos, true);
 	}
 	
 	/**
@@ -555,9 +579,8 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 	  		showHelp("ERROR: Sin marca de host.  Debe realizar la configuración correspondiente en la ventana Hosts de Replicación. ");
 
 	  	// Informar a usuario e Iniciar la transacción
-		String message = "[Client] Iniciando proceso. ";
-	  	System.out.println(message + "(" + DB.getDatabaseInfo() + ")");
-
+	  	System.out.println("[Client] Argumentos: " + Arrays.toString(args));
+	  	System.out.println("[Client] Host: " + DB.getDatabaseInfo());
 	  	ReplicationClientProcess rcp = new ReplicationClientProcess();
 	  	try {
 	  		rcp.prepare();
@@ -599,9 +622,9 @@ public class ReplicationClientProcess extends AbstractReplicationProcess {
 		saveLog(aLevel, persistError, logMessage, targetOrgPosOrID);
 		if (displayInTerminal) {
 			if (targetOrgPosOrID != null && targetOrgPosOrID > 0)
-				System.out.println("[Target: " + targetOrgPosOrID + "] " + logMessage);
+				System.out.println(Env.getTimestamp() + " [Target: " + targetOrgPosOrID + "] " + logMessage);
 			else
-				System.out.println("" + logMessage);
+				System.out.println(Env.getTimestamp() + logMessage);
 		}
 	}
 }

@@ -749,6 +749,19 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		return new SimpleResult(resultBean);		
 	}
 	
+	public synchronized SimpleResult processRetrievePdfFromDocument(Login login, SimpleMap[] arguments) {
+		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), arguments);
+		ResultBean resultBean = new ProcessExecuteHandler().processRetrievePdfFromDocument(bean);
+		return new SimpleResult(resultBean);
+	}
+	
+	public synchronized SimpleResult processGeneratePromotionCode(Login login, SimpleMap[] arguments) {
+		ParameterBean bean = new ParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), arguments);
+		ResultBean resultBean = new ProcessExecuteHandler().processGeneratePromotionCode(bean);
+		return new SimpleResult(resultBean);
+	}
+
+	
 	/* ================================================================== */
 	/* ==================== Funciones de uso general ==================== */
 	/* ================================================================== */

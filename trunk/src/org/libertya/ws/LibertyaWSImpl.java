@@ -540,6 +540,13 @@ public class LibertyaWSImpl implements LibertyaWS {
 		return new ProcessExecuteHandler().processCreditCardBatchClose(data);
 	}
 	
+	public synchronized ResultBean processRetrievePdfFromDocument(ParameterBean data) {
+		return new ProcessExecuteHandler().processRetrievePdfFromDocument(data);
+	}
+	
+	public ResultBean processGeneratePromotionCode(ParameterBean data) {
+		return new ProcessExecuteHandler().processGeneratePromotionCode(data);
+	}
 	
 	/* ================================================================== */
 	/* ========================= Replicación ============================ */

@@ -1173,6 +1173,30 @@ public interface LibertyaWS {
 	 */
 	public ResultBean processCreditCardBatchClose(ParameterBean data);
 	
+	/**
+	 * Recupera en formato PDF la impresion de un documento (factura, pedido, remito, RC) <br> 
+	 * tal como se visualizaría en el visor de documentos de Libertya al imprimirlo <br>
+	 * @param data datos de acceso y argumentos. Se utiliza la map de mainTable para especificar 
+	 * los argumentos del proceso, a fin de lograr versatilidad en caso de tener que incorporar nuevos parametros.
+	 * 	 	- tableName nombre de la tabla sobre la cual recuperar la impresion. Opciones validas: C_Invoice, C_Order, M_InOut, C_AllocationHdr <br>
+	 * 		- recordID identificador del registro sobre el cual recuperar la impresion <br>
+	 * @return un string codificado en Base64 con la informacion del documento en la key con nombre PDF del resultBean
+	 */
+	public ResultBean processRetrievePdfFromDocument(ParameterBean data);
+	
+	
+	/**
+	 * Dispara la generacion de un cupon promocional
+	 * @param data datos de acceso.
+	 * @return la siguiente informacion bajo cada una de las siguientes claves: <br>
+	 * - Code: Codigo de cupon <br>
+	 * - Promotion: Nombre de la promocion <br>
+	 * - ValidFrom: Valido desde <br>
+	 * - ValidTo: Valido hasta (si fue definido) <br>
+	 * - Batch: Numero de lote
+	 */
+	public ResultBean processGeneratePromotionCode(ParameterBean data);
+	
 	/* ================================================================== */
 	/* ========================= Replicación ============================ */
 	/* ================================================================== */

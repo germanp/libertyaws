@@ -6,11 +6,19 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.HashMap;
 
+import org.apache.commons.codec.binary.Base64;
 import org.libertya.ws.bean.parameter.ParameterBean;
 import org.libertya.ws.bean.result.ResultBean;
 import org.openXpertya.apps.ProcessParameter;
 import org.openXpertya.model.FiscalDocumentPrint;
 import org.openXpertya.model.MProcess;
+import org.openXpertya.model.X_C_AllocationHdr;
+import org.openXpertya.model.X_C_Invoice;
+import org.openXpertya.model.X_C_Order;
+import org.openXpertya.model.X_C_Promotion;
+import org.openXpertya.model.X_C_Promotion_Code;
+import org.openXpertya.model.X_C_Promotion_Code_Batch;
+import org.openXpertya.model.X_M_InOut;
 import org.openXpertya.print.fiscal.action.FiscalCloseAction;
 import org.openXpertya.process.ProcessInfo;
 import org.openXpertya.process.ProcessInfoParameter;
@@ -18,10 +26,23 @@ import org.openXpertya.process.ProcessInfoUtil;
 import org.openXpertya.util.DB;
 import org.openXpertya.util.DisplayType;
 import org.openXpertya.util.Trx;
+import org.openXpertya.util.Util;
 
 public class ProcessExecuteHandler extends GeneralHandler {
-
-
+	
+	
+	/** UID de la pestaña de facturas de cliente */
+	public static final String INVOICE_TAB_UID 	=  "CORE-AD_Tab-263";
+	/** UID de la pestaña de pedidos de cliente */
+	public static final String ORDER_TAB_UID 	=  "CORE-AD_Tab-186";
+	/** UID de la pestaña de remitos de salida */
+	public static final String INOUT_TAB_UID 	=  "CORE-AD_Tab-257";
+	/** UID de la pestaña de recibos de cliente */
+	public static final String RECEIPT_TAB_UID 	=  "CORE-AD_Tab-1000188";
+	
+	/** Mapeo Tabla -> ID de proceso de impresion */
+	protected static HashMap<String, Integer> tablesAndPrintProcesses = null;
+	
 	/**
 	 * Cierre de lote de tarjeta de crédito
 	 */
@@ -37,7 +58,9 @@ public class ProcessExecuteHandler extends GeneralHandler {
 			// Invocar la ejecución del proceso
 			ProcessInfo pi = executeProcess("Cierre de lote de tarjeta de credito", 
 											getProcessIDFromComponentObjectUID(BATCH_CLOSING_CREDIT_CARD_PROCESS_COMPONENTUID), 
-											data.getMainTable());
+											data.getMainTable(),
+											null,
+											null);
 			
 			// En caso de error disparar una excepcion
 			if (pi.isError())
@@ -95,8 +118,171 @@ public class ProcessExecuteHandler extends GeneralHandler {
 		}
 	}
 
+	/**
+	 * Recuperacion de un documento de impresion en formato PDF
+	 */
+	public ResultBean processRetrievePdfFromDocument(ParameterBean data) {
+		try
+		{
+			/* === Configuracion inicial === */
+			init(data, new String[]{}, new Object[]{});	
+			
+			// Parseo argumento tableName
+			String tableName = null;
+			tableName = toLowerCaseKeys(data.getMainTable()).get("tablename");
+			if (Util.isEmpty(tableName))
+				throw new Exception("Argumento tableName no especificado");
 
+			// Parseo argumento recordID
+			int recordID = -1;
+			try {
+				recordID = Integer.parseInt(toLowerCaseKeys(data.getMainTable()).get("recordid"));				
+			} catch (Exception e) {
+				throw new Exception ("Argumento recordID no especificado o invalido");
+			}
+			
+			// Invocar la ejecución del proceso
+			ProcessInfo pi = executeProcess("Impresion de Documento", 
+											getPrintProcessID(tableName, recordID), 
+											data.getMainTable(),
+											recordID,
+											true);
+			
+			// En caso de error disparar una excepcion
+			if (pi.isError())
+				throw new Exception("Error en ejecución: " + pi.getSummary());
+			
+			/* === Commitear transaccion === */
+			Trx.getTrx(getTrxName()).commit();
+			
+			/* === Retornar valor === */
+			HashMap<String, String> result = new HashMap<String, String>();
+			String encodedBase64 = Base64.encodeBase64String(pi.getReportResultStream().toByteArray());
+			result.put("PDF", encodedBase64);
+			return new ResultBean(false, null, result);
+		}
+		catch (Exception e) {
+			return processException(e, wsInvocationArguments(data));
+		}
+		finally	{
+			closeTransaction();
+		}
+	}
 	
+	
+	/**
+	 * Operación de Generacion de Cupones de Descuentos
+	 * Esta operacion genera unicamente UN cupon de descuento
+	 */
+	public ResultBean processGeneratePromotionCode(ParameterBean data) {
+		try
+		{
+			// AD_ComponentObjectUID del proceso de Generacion de Cupones de Descuentos
+			final String GENERATE_PROMOTION_CODES_PROCESS_COMPONENTUID =  "CORE-AD_Process-1010614";
+			
+			/* === Configuracion inicial === */
+			init(data, new String[]{}, new Object[]{});	
+			
+			// Invocar la ejecución del proceso
+			ProcessInfo pi = executeProcess("Generacion de Cupones de Descuentos", 
+											getProcessIDFromComponentObjectUID(GENERATE_PROMOTION_CODES_PROCESS_COMPONENTUID), 
+											data.getMainTable(),
+											null,
+											true);
+			
+			// En caso de error disparar una excepcion
+			if (pi.isError())
+				throw new Exception("Error en ejecución: " + pi.getSummary());
+
+			/* === Commitear transaccion === */
+			Trx.getTrx(getTrxName()).commit();
+
+			/* === Retornar valor === */
+			HashMap<String, String> result = new HashMap<String, String>();
+			
+			// Basado en la informacion que retorna el proceso, cargar la información resultante
+			// Recuperar el lote desde el InfoLog
+			int promBatchID = pi.getLogs()[0].getP_ID();
+			if (promBatchID<=0)
+				throw new Exception("Error al recuperar el lote de promocion");
+			X_C_Promotion_Code_Batch aPromBatch = new X_C_Promotion_Code_Batch(getCtx(), promBatchID, null);
+			// Recuperar EL cupon y guardarlo en la map de resultados (por definicion, solo se genera un solo cupon)
+			int promCodeID = DB.getSQLValue(null, "SELECT C_Promotion_Code_ID FROM C_Promotion_Code WHERE C_Promotion_Code_Batch_ID = " + promBatchID);
+			if (promCodeID<=0)
+				throw new Exception("Error al recuperar el cupon de la promocion");
+			X_C_Promotion_Code aPromCode = new X_C_Promotion_Code(getCtx(), promCodeID, null);
+			// Codigo de cupon
+			result.put("Code", aPromCode.getCode());
+			// Promocion (texto de la promo)
+			X_C_Promotion aProm = new X_C_Promotion(getCtx(), aPromCode.getC_Promotion_ID(), null);
+			if (aProm!=null)
+				result.put("Promotion", aProm.getName());
+			// Valido desde
+			if (aPromCode.getValidFrom()!=null)
+				result.put("ValidFrom", aPromCode.getValidFrom().toString());
+			// Valido hasta
+			if (aPromCode.getValidTo()!=null)
+				result.put("ValidTo", aPromCode.getValidTo().toString());
+			// Nro Lote
+			result.put("Batch", aPromBatch.getDocumentNo());
+			
+			return new ResultBean(false, null, result);
+		}
+		catch (Exception e) {
+			return processException(e, wsInvocationArguments(data));
+		}
+		finally	{
+			closeTransaction();
+		}
+	}
+
+	/**
+	 * Determina el ID del proceso a invocar en funcion de la tabla utilizada (similara a la actividad de APanel
+	 */
+	protected int getPrintProcessID(String tableName, int recordID) throws Exception {
+		
+		// Inicializar la map
+		if (tablesAndPrintProcesses==null) { 
+			tablesAndPrintProcesses = new HashMap<String, Integer>();
+			tablesAndPrintProcesses.put(X_C_Invoice.Table_Name.toLowerCase(), 			DB.getSQLValue(null, "SELECT AD_Process_ID FROM AD_Tab WHERE AD_ComponentObjectUID = '" + INVOICE_TAB_UID + "'") );
+			tablesAndPrintProcesses.put(X_C_Order.Table_Name.toLowerCase(), 			DB.getSQLValue(null, "SELECT AD_Process_ID FROM AD_Tab WHERE AD_ComponentObjectUID = '" + ORDER_TAB_UID + "'") );
+			tablesAndPrintProcesses.put(X_M_InOut.Table_Name.toLowerCase(), 			DB.getSQLValue(null, "SELECT AD_Process_ID FROM AD_Tab WHERE AD_ComponentObjectUID = '" + INOUT_TAB_UID + "'") );
+			tablesAndPrintProcesses.put(X_C_AllocationHdr.Table_Name.toLowerCase(), 	DB.getSQLValue(null, "SELECT AD_Process_ID FROM AD_Tab WHERE AD_ComponentObjectUID = '" + RECEIPT_TAB_UID + "'") );
+		}
+		
+		// Es una tabla valida?
+		if (!tablesAndPrintProcesses.containsKey(tableName.toLowerCase()))
+			throw new Exception("No es posible recuperar el proceso de informe para la tabla " + tableName);
+		
+		// Existe el registro?
+		if (0 >= DB.getSQLValue(getTrxName(), "SELECT count(1) " + getFromWhereClause(tableName, recordID)) )
+			throw new Exception("No es posible recuperar el registro " + recordID + " de la tabla " + tableName);
+
+		// Valor a retornar
+		int processID = -1;
+		
+		// Determinar el doctype del documento a fin de recuperar - si es que lo tiene - el proceso de impresion a utilizar
+		int docTypeID = DB.getSQLValue(null, "SELECT C_DocTypeTarget_ID " + getFromWhereClause(tableName, recordID));
+		if (docTypeID <= 0) 
+			docTypeID = DB.getSQLValue(null, "SELECT C_DocType_ID " + getFromWhereClause(tableName, recordID));
+		if (docTypeID > 0)
+			processID = DB.getSQLValue(null, "SELECT AD_Process_ID FROM C_DocType WHERE C_DocType_ID = " + docTypeID);
+		
+		// Si el doctype no tiene un proceso de impresion especificado, recuperar el configurado en la pestaña asociada a la tabla
+		if (processID <= 0)
+			processID = tablesAndPrintProcesses.get(tableName.toLowerCase());
+		
+		// Si no se encuentra un proceso, elevar la excepcion
+		if (processID <= 0)
+			throw new Exception("No existe una configuracion de informe Jasper asociado al documento en metadatos, ni para el tipo de documento del documento, ni para la pestaña asociada a la tabla");
+		
+		return processID;
+	}
+	
+	/** Clausula FROM/WHERE a utilizar en todos los casos */
+	protected String getFromWhereClause(String tableName, int recordID) {
+		return " FROM " + tableName + " WHERE " + tableName + "_ID = " + recordID;
+	}
 	
 	/**
 	 * Ejecuta un AD_Process.
@@ -107,12 +293,18 @@ public class ProcessExecuteHandler extends GeneralHandler {
 	 *  - NO CONTEMPLA argumentos con rangos! <br>
 	 * @param ctx contexto
 	 * @param trxName transaccion.
+	 * @param recordID si se desea ejecutar el proceso para un registro en particular
+	 * @param streamOnly si es un informe, requerir la generacion de la impresion y guardarla en el ProcessInfo, pero no imprimirla
 	 * @return el ProcessInfoResultante
 	 */
-	protected ProcessInfo executeProcess(String title, int processID, HashMap<String, String> arguments) throws Exception {
+	protected ProcessInfo executeProcess(String title, int processID, HashMap<String, String> arguments, Integer recordID, Boolean streamOnly) throws Exception {
 		
 		// Nuevo ProcessInfo según el processID indicado
 		ProcessInfo pi = new ProcessInfo(title, processID);
+		if (recordID != null)
+			pi.setRecord_ID(recordID);
+		if (streamOnly != null)
+			pi.setToStreamOnly(streamOnly);		
 		
 		// Iterar por los parametros y cargarlos
     	PreparedStatement pstmt = ProcessParameter.GetProcessParameters(processID);
@@ -167,5 +359,7 @@ public class ProcessExecuteHandler extends GeneralHandler {
         // Retornar valor
         return retValue;
 	}
+	
+
 	
 }

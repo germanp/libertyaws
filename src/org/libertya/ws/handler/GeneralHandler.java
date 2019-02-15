@@ -505,8 +505,11 @@ public abstract class GeneralHandler {
 	protected HashMap<String, String> toLowerCaseKeys(HashMap<String, String> map)
 	{
 		HashMap<String, String> result = new HashMap<String, String>();
-		for (String key : map.keySet())
-			result.put(key.toLowerCase(), map.get(key));
+		for (String key : map.keySet()) {
+			if (key!=null) {
+				result.put(key.toLowerCase(), map.get(key));
+			}
+		}
 		return result;
 	}
 	
@@ -518,8 +521,11 @@ public abstract class GeneralHandler {
 	protected ArrayList<String> toLowerCaseValues(ArrayList<String> values) 
 	{
 		ArrayList<String> result = new ArrayList<String>();
-		for (String value : values)
-			result.add(value.toLowerCase());
+		for (String value : values) {
+			if (value!=null) {
+				result.add(value.toLowerCase());
+			}
+		}
 		return result;
 	}
 	

@@ -180,8 +180,58 @@ public class ProcessExecuteHandler extends GeneralHandler {
 			// AD_ComponentObjectUID del proceso de Generacion de Cupones de Descuentos
 			final String GENERATE_PROMOTION_CODES_PROCESS_COMPONENTUID =  "CORE-AD_Process-1010614";
 			
+			// Argumento dentro del ParameterBean: numero de documento de la factura original
+			final String ARG_INVOICE_DOC = "invoiceDoc";
+			// Argumento dentro del ParameterBeann: nro de documento del cliente
+			final String ARG_CUSTOMER_DNI = "customerDNI";
+			
 			/* === Configuracion inicial === */
 			init(data, new String[]{}, new Object[]{});	
+			
+			// Numero de documento de la factura original con la que se generara el cupon promocional
+			int invoiceID = -1;
+			// Numero de documento del cliente especificado en la factura original
+			String customerDNI = "";
+			
+			// Validar que la factura original exista 
+			try {
+				// Se cargo el parametro?
+				if (toLowerCaseKeys(data.getMainTable()).get(ARG_INVOICE_DOC.toLowerCase()) == null) 
+					throw new Exception("Debe especificar el numero de documento de la factura original con el cual generar el cupon promocional, bajo la clave " + ARG_INVOICE_DOC);
+				// Recuperar la factura, si es que existe
+				String invDocNo = toLowerCaseKeys(data.getMainTable()).get("invoicedoc");
+				invoiceID = DB.getSQLValue(getTrxName(), 	" SELECT i.C_Invoice_ID " +
+															" FROM C_Invoice i " +
+															" INNER JOIN C_DocType dt ON i.C_DocTypeTarget_ID = dt.C_DocType_ID " +
+															" WHERE dt.docTypeKey LIKE 'CI%'" +
+															" AND i.documentNo = '" + invDocNo + "'" +
+															" AND i.isSoTrx = 'Y'" +
+															" AND i.docStatus IN ('CO', 'CL') " +
+															" AND i.AD_Client_ID = " + data.getClientID());
+				if (invoiceID <= 0)
+					throw new Exception("No se ha encontrado una factura con el numero de documento ingresado");
+			} catch (Exception e) {
+				throw new Exception("Error al recuperar la factura: " + e.getMessage());
+			}
+						
+			// Validar que la factura original pertenezca a quien se indica que corresponde
+			try {
+				// Se cargo el parametro?
+				if (toLowerCaseKeys(data.getMainTable()).get(ARG_CUSTOMER_DNI.toLowerCase()) == null)
+					throw new Exception("Debe especificar el numero de documento (DNI) del cliente registrado en la factura con la que se esta generando el cupon promocional, bajo la clave " + ARG_CUSTOMER_DNI);
+				customerDNI = toLowerCaseKeys(data.getMainTable()).get(ARG_CUSTOMER_DNI.toLowerCase());
+				int cant = DB.getSQLValue(getTrxName(), " SELECT count(1) " +
+														" FROM C_Invoice " +
+														" WHERE C_Invoice_ID = " + invoiceID +
+														" AND (cuit = '" + customerDNI + "' OR nroidentificcliente = '" + customerDNI + "')");
+				if (cant<=0) 
+					throw new Exception("El DNI especificado no corresponde al cliente registrado en la factura indicada");
+			} catch (Exception e) {
+				throw new Exception("Error al recuperar el cliente: " + e.getMessage());
+			}
+
+			// Cargar en la map de argumentos el argument C_Invoice_Orig_ID, el cual es requerido en la clase
+			data.getMainTable().put("C_Invoice_Orig_ID", ""+invoiceID);
 			
 			// Invocar la ejecución del proceso
 			ProcessInfo pi = executeProcess("Generacion de Cupones de Descuentos", 

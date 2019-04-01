@@ -1187,7 +1187,9 @@ public interface LibertyaWS {
 	
 	/**
 	 * Dispara la generacion de un cupon promocional
-	 * @param data datos de acceso.
+	 * @param data datos de acceso en donde tambien debe especificarse en la map los siguientes:
+	 * - invoiceDoc: numero de documento de la factura original con la que se generará el cupon promocional
+	 * - customerDNI: numero de documento del cliente indicado en la factura original
 	 * @return la siguiente informacion bajo cada una de las siguientes claves: <br>
 	 * - Code: Codigo de cupon <br>
 	 * - Promotion: Nombre de la promocion <br>

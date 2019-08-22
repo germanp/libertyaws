@@ -1,12 +1,16 @@
 package org.libertya.ws.handler;
 
 import java.math.BigDecimal;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.libertya.ws.bean.parameter.DocumentParameterBean;
 import org.libertya.ws.bean.parameter.OrderParameterBean;
 import org.libertya.ws.bean.parameter.ParameterBean;
+import org.libertya.ws.bean.result.DocumentResultBean;
 import org.libertya.ws.bean.result.ResultBean;
 import org.libertya.ws.exception.ModelException;
 import org.libertya.ws.handler.createFrom.CreateFromInvoice;
@@ -21,8 +25,9 @@ import org.openXpertya.model.MOrderLine;
 import org.openXpertya.model.PO;
 import org.openXpertya.process.DocAction;
 import org.openXpertya.process.DocumentEngine;
+import org.openXpertya.replication.ReplicationConstants;
 import org.openXpertya.util.CLogger;
-import org.openXpertya.util.Env;
+import org.openXpertya.util.DB;
 import org.openXpertya.util.Msg;
 import org.openXpertya.util.Trx;
 
@@ -571,6 +576,134 @@ public class OrderDocumentHandler extends DocumentHandler {
 			closeTransaction();
 		}
 
+	}
+	
+	
+	/**
+	 * Verifica y eventualmente actualiza las cantidades de las linea de pedido, requerido desde una sucursal remota.
+	 */
+	public DocumentResultBean orderLinesCheckUpdate(DocumentParameterBean data) {
+		try
+		{
+			/* === Configuracion inicial === */
+			init(data, new String[]{}, new Object[]{});
+			
+			DocumentResultBean result = new DocumentResultBean();
+			// Hubo algun error o discrepancia?
+			boolean error = false;
+			// Querys de consulta de linea de pedido
+			StringBuffer currentSQL = new StringBuffer();
+			// Querys de actualizacion de lineas de pedido 
+			StringBuffer newSQL = new StringBuffer();
+			
+			// Iterar por todas las lineas de pedido a checkar/actualizar
+			for (HashMap<String, String> aDocumentLine : data.getDocumentLines()) {
+				
+				// Se envió informacion?
+				if (aDocumentLine==null || aDocumentLine.size()<=1) {
+					throw new Exception("No hay información suficiente definida en el documentLine (se debe especificar retrieveUID de la linea y columnas a verificar (current*) / actualizar (new*))");
+				}
+				aDocumentLine = toLowerCaseKeys(aDocumentLine);
+				
+				// La columna retrieveUID de la linea de pedido es obligatoria
+				String orderLineUID = aDocumentLine.get(ReplicationConstants.COLUMN_RETRIEVEUID.toLowerCase());
+				if (orderLineUID == null || orderLineUID.trim().length()==0) {
+					throw new Exception("No se ha definido la clave retrieveUID de la linea de pedido en el documentLine");
+				}
+			
+				// Regenerar la consulta SELECT .. FROM C_OrderLine WHERE retrieveuid = ...
+				currentSQL = new StringBuffer("SELECT ");
+				// Concatenar la consulta UPDATE C_OrderLine SET ... con las lineas anteriores a fin de ejecutar una única vez
+				newSQL.append("UPDATE C_OrderLine SET ");
+				
+				// Resultado del primer item de la lista
+				HashMap<String, String> aDocumentLineResult = new HashMap<String, String>();
+				aDocumentLineResult.put(ReplicationConstants.COLUMN_RETRIEVEUID, orderLineUID);
+				
+				// Armar el SQL de verificacion y de actualizacion 
+				int currentCount = 0, newCount = 0;
+				for (String col : aDocumentLine.keySet()) {
+					if (col.startsWith("retrieveuid")) {
+						continue;
+					} else if (col.startsWith("current")) {
+						String dbCol = col.substring("current".length());
+						currentSQL.append("coalesce(" + dbCol + ",0) as " + dbCol + ", ");
+						currentCount++;
+					} else if (col.startsWith("new")) {
+						String dbCol = col.substring("new".length());
+						newSQL.append(dbCol + "=" + aDocumentLine.get(col) + ", ");
+						newCount++;
+					}
+				}
+				
+				// Se definieron columnas a actualizar? si no se definieron, no tiene sentido hacer más nada
+				if (newCount>0) {
+					throw new Exception("No hay columnas a actualizar (new*) definidas en la linea de documento con retrieveUID " + orderLineUID);
+				}
+
+				// Armar el quey de verificacion de valores actuales y corroborar
+				if (currentCount > 0) {
+					currentSQL.setLength(currentSQL.length() - 2); 
+					currentSQL.append(" FROM C_OrderLine WHERE retrieveUID = '" + orderLineUID + "'");
+					PreparedStatement pstmt = DB.prepareStatement(currentSQL.toString(), getTrxName());
+					ResultSet rs = pstmt.executeQuery();
+					if (!rs.next()) {
+						throw new Exception("No existe informacion de la linea de pedido con identificador: " + orderLineUID);
+					} else {
+						// Para cada columna recibida via WS, coincide el valor en BBDD?
+						for (String col : aDocumentLine.keySet()) {
+							if (col.startsWith("retrieveuid")) {
+								continue;
+							} if (col.startsWith("current")) {
+								// Comparar el current recibido con el "master" local
+								String dbCol = col.substring("current".length());
+								BigDecimal aCurrentQty = new BigDecimal(aDocumentLine.get(col));
+								BigDecimal localCurrentQty = rs.getBigDecimal(dbCol);
+								// Si no son iguales, entonces incorporarlo a la nomina de diferencias
+								if (aCurrentQty.compareTo(localCurrentQty)!=0) {
+									aDocumentLineResult.put(col, ""+localCurrentQty);
+									result.addDocumentLine(aDocumentLineResult);
+									error = true;
+								}
+							}
+						}
+					}
+				}
+				
+				// Ampliar el SQL de actualización, pero si hubo errores, luego no se ejecutara la query. 
+				// Igualmente se recorre toda la informacion recibida a fin de retornar todos los errores
+				newSQL.setLength(newSQL.length() - 2);
+				newSQL.append(" WHERE retrieveuid = '" + orderLineUID + "'; ");
+			}
+			
+			// Si hubo errores no realizar modificacion local alguna
+			if (error) {
+				result.setError(true);
+				result.setErrorMsg("Imposible actualizar. Valores actuales recibidos no coinciden con locales, incorrectos o falta informacion. Verificar detalles en documentLines");
+				return result;
+			}
+			
+			// Todo bien? Ejecutar y commitear la trx o bien informar el error
+			if (DB.executeUpdate(newSQL.toString(), false, getTrxName(), true) <= 0) {
+				result.setError(true);
+				result.setErrorMsg("Error al actualizar las lineas de pedido: " + CLogger.retrieveErrorAsString() + " SQL: " + newSQL.toString());
+				Trx.getTrx(getTrxName()).rollback();
+			} else {
+				Trx.getTrx(getTrxName()).commit();
+			}
+			
+			// Retornar status al invoker
+			return result;
+		}
+		catch (ModelException me) {
+			return (DocumentResultBean)processException(me, new DocumentResultBean(), wsInvocationArguments(data));
+		}
+		catch (Exception e) {
+			return (DocumentResultBean)processException(e, new DocumentResultBean(), wsInvocationArguments(data));
+		}
+		finally	{
+			closeTransaction();
+		}
 	}
 
 	

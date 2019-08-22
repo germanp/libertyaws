@@ -617,6 +617,28 @@ public interface LibertyaWS {
 	public ResultBean orderUpdateByColumn(ParameterBean data, String columnName, String columnCriteria, boolean completeOrder);
 
 	
+	/**
+	 * Consulta - y eventualmente actualiza en la misma operacion si la informacion es correcta - las cantidades pertenecientes a las lineas de pedido.
+	 * Esta operación se utiliza principalmente para la entrega de mercadería en una sucursal distinta a la sucursal en donde se generó el pedido,
+	 * con lo cual se requiere validar que las cantidades pendientes a entregar efectivamente sean las adecuadas, previo a la entrega de mercadería.
+	 * Desde la sucursal donde se retira la mercadería, se debe enviar a la sucursal origen del pedido las existencias actuales de cada línea de pedido, 
+	 * así como las nuevas cantidades.  Unicamente si la información enviada desde la sucursal remota en las líneas de pedido coincide con la información 
+	 * de la sucursal origen, entonces se aceptarán las nuevas cantidades, actualizando las mismas.
+	 * @param data parametros de login, así como de las líneas a checkear y actualizar (cada línea en una posición de documentLines), bajo siguientes las claves,
+	 * 			las cuales serán parte del Map perteneciente a una posición de documentLinest: retrieveUID de la linea de pedido y alguna de los siguientes: currentQtyOrdered,  
+	 * 			currentQtyDelivered, currentQtyReserved, currentQtyTransferred, currentQtyReturned.  Adicionalmente se enviarán los nuevos valores de cantidades, bajo  
+	 * 			algunas de las siguientes claves: newQtyOrdered, newQtyDelivered, newQtyReserved, newQtyTransferred y newQtyReturned.
+	 * 			El nombre de las columnas a verificar (current*) como el de las columnas a actualizar (new*), como por ejemplo currentQtyTransferred, newQtyDelivered, etc. 
+	 * 			junto con las cantidades, así como la columna obligatoria retrieveUID se deberán enviar en documentLines (uno por linea de pedido).  
+	 * 			No es necesario enviar todas las columnas current* o new* , solo las que se desea evaluar / actualizar.
+	 * 			La implementacion no valida si las lineas enviadas pertenecen a un pedido o a varios.  
+	 * @return
+	 * 		OK si no hay discrepancias entre las existencias y se ejecuta correctamente la modificacion, o bien
+	 * 			- un error general (envio de una columna inexistente por ejemplo),
+	 *			- la nómina de cantidades actuales que deberán ser adecuados en el host remoto (bajo campos current*)  
+	 */
+	public DocumentResultBean orderLinesCheckUpdate(DocumentParameterBean data);
+	
 	/* ===================================================== */
 	/* ===================== Remitos ======================= */
 	/* ===================================================== */
@@ -894,7 +916,8 @@ public interface LibertyaWS {
 	 */
 	public StorageResultBean storageQuery(ParameterBean data, int[] warehouseList, int locatorID, String productValue, int productID, String lot, String serno);
 	
-	
+
+
 	/* ================================================================== */
 	/* ========================= Inventario ============================= */
 	/* ================================================================== */

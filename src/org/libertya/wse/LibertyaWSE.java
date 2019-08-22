@@ -312,6 +312,10 @@ public interface LibertyaWSE {
 	 */
 	public SimpleResult orderUpdateByColumn(Login login, SimpleMap[] data, String columnName, String columnCriteria, boolean completeOrder);
 	
+	/**
+	 * Wrapper para <code>orderLinesCheckUpdate(DocumentParameterBean data)</code>
+	 */
+	public DocumentResult orderLinesCheckUpdate(Login login, SimpleMap[] header, DocumentLine[] lines);
 	
 	/* ===================================================== */
 	/* ===================== Remitos ======================= */

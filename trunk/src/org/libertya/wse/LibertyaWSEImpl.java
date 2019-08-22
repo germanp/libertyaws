@@ -399,6 +399,12 @@ public class LibertyaWSEImpl implements LibertyaWSE {
 		return new SimpleResult(resultBean);
 	}
 	
+	public synchronized DocumentResult orderLinesCheckUpdate(Login login, SimpleMap[] header, DocumentLine[] lines) {
+		DocumentParameterBean bean = new DocumentParameterBean(login.getUserName(), login.getPassword(), login.getClientID(), login.getOrgID(), header, lines);
+		DocumentResultBean resultBean = new OrderDocumentHandler().orderLinesCheckUpdate(bean);
+		return new DocumentResult(resultBean);
+	}
+	
 	/* ===================================================== */
 	/* ===================== Remitos ======================= */
 	/* ===================================================== */

@@ -283,7 +283,10 @@ public class LibertyaWSImpl implements LibertyaWS {
 		return new OrderDocumentHandler().orderUpdateByColumn(data, columnName, columnCriteria, completeOrder);
 	}
 
-
+	public synchronized DocumentResultBean orderLinesCheckUpdate(DocumentParameterBean data) {
+		return new OrderDocumentHandler().orderLinesCheckUpdate(data);
+	}
+	
 	/* ===================================================== */
 	/* ===================== Remitos ======================= */
 	/* ===================================================== */

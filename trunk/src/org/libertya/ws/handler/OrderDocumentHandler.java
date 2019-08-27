@@ -587,28 +587,33 @@ public class OrderDocumentHandler extends DocumentHandler {
 		{
 			/* === Configuracion inicial === */
 			init(data, new String[]{}, new Object[]{});
-			
+
+			// Resultado de la operacion
 			DocumentResultBean result = new DocumentResultBean();
-			// Hubo algun error o discrepancia?
-			boolean error = false;
 			// Querys de consulta de linea de pedido
 			StringBuffer currentSQL = new StringBuffer();
 			// Querys de actualizacion de lineas de pedido 
 			StringBuffer newSQL = new StringBuffer();
+			// Debe ejecutarse un update?
+			boolean shouldUpdate = false;
 			
 			// Iterar por todas las lineas de pedido a checkar/actualizar
 			for (HashMap<String, String> aDocumentLine : data.getDocumentLines()) {
 				
 				// Se envió informacion?
 				if (aDocumentLine==null || aDocumentLine.size()<=1) {
-					throw new Exception("No hay información suficiente definida en el documentLine (se debe especificar retrieveUID de la linea y columnas a verificar (current*) / actualizar (new*))");
+					result.setError(true);
+					result.setErrorMsg("No hay información suficiente definida en el documentLine (se debe especificar retrieveUID de la linea y columnas a verificar (current*) / actualizar (new*))");
+					break;
 				}
 				aDocumentLine = toLowerCaseKeys(aDocumentLine);
 				
 				// La columna retrieveUID de la linea de pedido es obligatoria
 				String orderLineUID = aDocumentLine.get(ReplicationConstants.COLUMN_RETRIEVEUID.toLowerCase());
 				if (orderLineUID == null || orderLineUID.trim().length()==0) {
-					throw new Exception("No se ha definido la clave retrieveUID de la linea de pedido en el documentLine");
+					result.setError(true);
+					result.setErrorMsg("No se ha definido la clave retrieveUID de la linea de pedido en el documentLine");
+					break;
 				}
 			
 				// Regenerar la consulta SELECT .. FROM C_OrderLine WHERE retrieveuid = ...
@@ -621,7 +626,7 @@ public class OrderDocumentHandler extends DocumentHandler {
 				aDocumentLineResult.put(ReplicationConstants.COLUMN_RETRIEVEUID, orderLineUID);
 				
 				// Armar el SQL de verificacion y de actualizacion 
-				int currentCount = 0, newCount = 0;
+				int currentCount = 0;
 				for (String col : aDocumentLine.keySet()) {
 					if (col.startsWith("retrieveuid")) {
 						continue;
@@ -630,17 +635,12 @@ public class OrderDocumentHandler extends DocumentHandler {
 						currentSQL.append("coalesce(" + dbCol + ",0) as " + dbCol + ", ");
 						currentCount++;
 					} else if (col.startsWith("new")) {
+						shouldUpdate = true;
 						String dbCol = col.substring("new".length());
 						newSQL.append(dbCol + "=" + aDocumentLine.get(col) + ", ");
-						newCount++;
 					}
 				}
 				
-				// Se definieron columnas a actualizar? si no se definieron, no tiene sentido hacer más nada
-				if (newCount>0) {
-					throw new Exception("No hay columnas a actualizar (new*) definidas en la linea de documento con retrieveUID " + orderLineUID);
-				}
-
 				// Armar el quey de verificacion de valores actuales y corroborar
 				if (currentCount > 0) {
 					currentSQL.setLength(currentSQL.length() - 2); 
@@ -648,7 +648,9 @@ public class OrderDocumentHandler extends DocumentHandler {
 					PreparedStatement pstmt = DB.prepareStatement(currentSQL.toString(), getTrxName());
 					ResultSet rs = pstmt.executeQuery();
 					if (!rs.next()) {
-						throw new Exception("No existe informacion de la linea de pedido con identificador: " + orderLineUID);
+						result.setError(true);
+						result.setErrorMsg("No existe informacion de la linea de pedido con identificador: " + orderLineUID);
+						break;
 					} else {
 						// Para cada columna recibida via WS, coincide el valor en BBDD?
 						for (String col : aDocumentLine.keySet()) {
@@ -661,9 +663,10 @@ public class OrderDocumentHandler extends DocumentHandler {
 								BigDecimal localCurrentQty = rs.getBigDecimal(dbCol);
 								// Si no son iguales, entonces incorporarlo a la nomina de diferencias
 								if (aCurrentQty.compareTo(localCurrentQty)!=0) {
-									aDocumentLineResult.put(col, ""+localCurrentQty);
+									aDocumentLineResult.put(dbCol, ""+localCurrentQty);
+									result.setErrorMsg("Valores actuales recibidos no coinciden para linea de documento: " + orderLineUID);
 									result.addDocumentLine(aDocumentLineResult);
-									error = true;
+									result.setError(true);
 								}
 							}
 						}
@@ -676,10 +679,8 @@ public class OrderDocumentHandler extends DocumentHandler {
 				newSQL.append(" WHERE retrieveuid = '" + orderLineUID + "'; ");
 			}
 			
-			// Si hubo errores no realizar modificacion local alguna
-			if (error) {
-				result.setError(true);
-				result.setErrorMsg("Imposible actualizar. Valores actuales recibidos no coinciden con locales, incorrectos o falta informacion. Verificar detalles en documentLines");
+			// Si hubo errores o bien no habia columnas new* entonces no realizar modificacion local alguna
+			if (result.isError() || !shouldUpdate) {
 				return result;
 			}
 			

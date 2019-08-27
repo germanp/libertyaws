@@ -628,7 +628,7 @@ public class OrderDocumentHandler extends DocumentHandler {
 				// Armar el SQL de verificacion y de actualizacion 
 				int currentCount = 0;
 				for (String col : aDocumentLine.keySet()) {
-					if (col.startsWith("retrieveuid")) {
+					if (col.startsWith(ReplicationConstants.COLUMN_RETRIEVEUID.toLowerCase())) {
 						continue;
 					} else if (col.startsWith("current")) {
 						String dbCol = col.substring("current".length());
@@ -652,9 +652,10 @@ public class OrderDocumentHandler extends DocumentHandler {
 						result.setErrorMsg("No existe informacion de la linea de pedido con identificador: " + orderLineUID);
 						break;
 					} else {
+						int mismatchCount = 0;
 						// Para cada columna recibida via WS, coincide el valor en BBDD?
 						for (String col : aDocumentLine.keySet()) {
-							if (col.startsWith("retrieveuid")) {
+							if (col.startsWith(ReplicationConstants.COLUMN_RETRIEVEUID.toLowerCase())) {
 								continue;
 							} if (col.startsWith("current")) {
 								// Comparar el current recibido con el "master" local
@@ -664,11 +665,15 @@ public class OrderDocumentHandler extends DocumentHandler {
 								// Si no son iguales, entonces incorporarlo a la nomina de diferencias
 								if (aCurrentQty.compareTo(localCurrentQty)!=0) {
 									aDocumentLineResult.put(dbCol, ""+localCurrentQty);
-									result.setErrorMsg("Valores actuales recibidos no coinciden para linea de documento: " + orderLineUID);
-									result.addDocumentLine(aDocumentLineResult);
+									result.setErrorMsg("Valores actuales recibidos no coinciden. Ver detalle. ");
 									result.setError(true);
+									mismatchCount++;
 								}
 							}
+						}
+						// Si hubo alguna discrepancia, entonces incorporar la linea
+						if (mismatchCount>0) {
+							result.addDocumentLine(aDocumentLineResult);
 						}
 					}
 				}

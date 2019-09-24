@@ -11,6 +11,7 @@ import org.libertya.ws.bean.parameter.ParameterBean;
 import org.libertya.ws.bean.result.ResultBean;
 import org.openXpertya.apps.ProcessParameter;
 import org.openXpertya.model.FiscalDocumentPrint;
+import org.openXpertya.model.MAllocationHdr;
 import org.openXpertya.model.MProcess;
 import org.openXpertya.model.X_C_AllocationHdr;
 import org.openXpertya.model.X_C_Invoice;
@@ -32,16 +33,27 @@ public class ProcessExecuteHandler extends GeneralHandler {
 	
 	
 	/** UID de la pestaña de facturas de cliente */
-	public static final String INVOICE_TAB_UID 	=  "CORE-AD_Tab-263";
+	public static final String INVOICE_TAB_UID 			=  "CORE-AD_Tab-263";
 	/** UID de la pestaña de pedidos de cliente */
-	public static final String ORDER_TAB_UID 	=  "CORE-AD_Tab-186";
+	public static final String ORDER_TAB_UID 			=  "CORE-AD_Tab-186";
 	/** UID de la pestaña de remitos de salida */
-	public static final String INOUT_TAB_UID 	=  "CORE-AD_Tab-257";
+	public static final String INOUT_TAB_UID 			=  "CORE-AD_Tab-257";
 	/** UID de la pestaña de recibos de cliente */
-	public static final String RECEIPT_TAB_UID 	=  "CORE-AD_Tab-1000188";
+	public static final String ALLOCATION_TAB_UID 		=  "CORE-AD_Tab-1000188";
 	
-	/** Mapeo Tabla -> ID de proceso de impresion */
+	/** UID de la pestaña de facturas de proveedor */
+	public static final String INVOICE_PO_TAB_UID 		=  "CORE-AD_Tab-290";
+	/** UID de la pestaña de pedidos de proveedor */
+	public static final String ORDER_PO_TAB_UID 		=  "CORE-AD_Tab-294";
+	/** UID de la pestaña de remitos de entrada */
+	public static final String INOUT_PO_TAB_UID 		=  "CORE-AD_Tab-296";
+	/** UID de la pestaña de ordenes de pago */
+	public static final String ALLOCATION_PO_TAB_UID 	=  "CORE-AD_Tab-1000157";
+	
+	/** Mapeo Tabla -> ID de proceso de impresion (de venta) */
 	protected static HashMap<String, Integer> tablesAndPrintProcesses = null;
+	/** Mapeo Tabla -> ID de proceso de impresion (de compra) */
+	protected static HashMap<String, Integer> tablesAndPrintProcessesPO = null;
 	
 	/**
 	 * Cierre de lote de tarjeta de crédito
@@ -291,19 +303,6 @@ public class ProcessExecuteHandler extends GeneralHandler {
 	 */
 	protected int getPrintProcessID(String tableName, int recordID) throws Exception {
 		
-		// Inicializar la map
-		if (tablesAndPrintProcesses==null) { 
-			tablesAndPrintProcesses = new HashMap<String, Integer>();
-			tablesAndPrintProcesses.put(X_C_Invoice.Table_Name.toLowerCase(), 			DB.getSQLValue(null, "SELECT AD_Process_ID FROM AD_Tab WHERE AD_ComponentObjectUID = '" + INVOICE_TAB_UID + "'") );
-			tablesAndPrintProcesses.put(X_C_Order.Table_Name.toLowerCase(), 			DB.getSQLValue(null, "SELECT AD_Process_ID FROM AD_Tab WHERE AD_ComponentObjectUID = '" + ORDER_TAB_UID + "'") );
-			tablesAndPrintProcesses.put(X_M_InOut.Table_Name.toLowerCase(), 			DB.getSQLValue(null, "SELECT AD_Process_ID FROM AD_Tab WHERE AD_ComponentObjectUID = '" + INOUT_TAB_UID + "'") );
-			tablesAndPrintProcesses.put(X_C_AllocationHdr.Table_Name.toLowerCase(), 	DB.getSQLValue(null, "SELECT AD_Process_ID FROM AD_Tab WHERE AD_ComponentObjectUID = '" + RECEIPT_TAB_UID + "'") );
-		}
-		
-		// Es una tabla valida?
-		if (!tablesAndPrintProcesses.containsKey(tableName.toLowerCase()))
-			throw new Exception("No es posible recuperar el proceso de informe para la tabla " + tableName);
-		
 		// Existe el registro?
 		if (0 >= DB.getSQLValue(getTrxName(), "SELECT count(1) " + getFromWhereClause(tableName, recordID)) )
 			throw new Exception("No es posible recuperar el registro " + recordID + " de la tabla " + tableName);
@@ -319,14 +318,57 @@ public class ProcessExecuteHandler extends GeneralHandler {
 			processID = DB.getSQLValue(null, "SELECT AD_Process_ID FROM C_DocType WHERE C_DocType_ID = " + docTypeID);
 		
 		// Si el doctype no tiene un proceso de impresion especificado, recuperar el configurado en la pestaña asociada a la tabla
-		if (processID <= 0)
-			processID = tablesAndPrintProcesses.get(tableName.toLowerCase());
+		if (processID <= 0) {
+			// Determinar el issotrx del documento 
+			boolean isSoTrx = getIsSoTrxFromDocument(tableName, recordID);
+			
+			// Inicializar la map de procesos
+			if (getTablesAndPrintProcesses(isSoTrx)==null) { 
+				initTablesAndPrintProcesses(isSoTrx);
+				getTablesAndPrintProcesses(isSoTrx).put(X_C_Invoice.Table_Name.toLowerCase(), 			DB.getSQLValue(null, "SELECT AD_Process_ID FROM AD_Tab WHERE AD_ComponentObjectUID = '" + (isSoTrx ? INVOICE_TAB_UID 	: INVOICE_PO_TAB_UID) 	 + "'") );
+				getTablesAndPrintProcesses(isSoTrx).put(X_C_Order.Table_Name.toLowerCase(), 			DB.getSQLValue(null, "SELECT AD_Process_ID FROM AD_Tab WHERE AD_ComponentObjectUID = '" + (isSoTrx ? ORDER_TAB_UID 		: ORDER_PO_TAB_UID) 	 + "'") );
+				getTablesAndPrintProcesses(isSoTrx).put(X_M_InOut.Table_Name.toLowerCase(), 			DB.getSQLValue(null, "SELECT AD_Process_ID FROM AD_Tab WHERE AD_ComponentObjectUID = '" + (isSoTrx ? INOUT_TAB_UID 		: INOUT_PO_TAB_UID)		 + "'") );
+				getTablesAndPrintProcesses(isSoTrx).put(X_C_AllocationHdr.Table_Name.toLowerCase(), 	DB.getSQLValue(null, "SELECT AD_Process_ID FROM AD_Tab WHERE AD_ComponentObjectUID = '" + (isSoTrx ? ALLOCATION_TAB_UID : ALLOCATION_PO_TAB_UID) + "'") );
+			}
+			
+			// Es una tabla valida?
+			if (!getTablesAndPrintProcesses(isSoTrx).containsKey(tableName.toLowerCase()))
+				throw new Exception("No es posible recuperar el proceso de informe para la tabla " + tableName);
+			
+			// Asignar el processID basado en la pestaña
+			processID = getTablesAndPrintProcesses(isSoTrx).get(tableName.toLowerCase());
+		}
 		
 		// Si no se encuentra un proceso, elevar la excepcion
 		if (processID <= 0)
 			throw new Exception("No existe una configuracion de informe Jasper asociado al documento en metadatos, ni para el tipo de documento del documento, ni para la pestaña asociada a la tabla");
 		
 		return processID;
+	}
+	
+	/** Devuelve la map a utilizar dependiendo si es trx de compra o de venta */
+	protected static HashMap<String, Integer> getTablesAndPrintProcesses(boolean isSoTrx) {
+		return isSoTrx ? tablesAndPrintProcesses : tablesAndPrintProcessesPO;
+	}
+	
+	/** Inicializa la map que corresponda */
+	protected static void initTablesAndPrintProcesses(boolean isSoTrx) {
+		if (isSoTrx)
+			tablesAndPrintProcesses = new HashMap<String, Integer>();
+		else
+			tablesAndPrintProcessesPO = new HashMap<String, Integer>();
+	}
+
+	/** Devuelve el IsSoTrx del documento */
+	protected boolean getIsSoTrxFromDocument(String tableName, int recordID) {
+		// Los allocations no cuentan con el campo issotrx
+		if (X_C_AllocationHdr.Table_Name.equalsIgnoreCase(tableName)) {
+			MAllocationHdr allocHdr = new MAllocationHdr(getCtx(), recordID, null);
+			return allocHdr.isSOTrx();
+		}
+		// Orders, Invoices, InOuts cuentan con el campo issotrx
+		String isSoTrx = DB.getSQLValueString(null, "SELECT IsSoTrx " + getFromWhereClause(tableName, recordID));
+		return "Y".equalsIgnoreCase(isSoTrx);
 	}
 	
 	/** Clausula FROM/WHERE a utilizar en todos los casos */
